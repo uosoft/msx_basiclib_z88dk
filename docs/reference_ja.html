@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSX BASIC Library for Z88DK - APIリファレンス</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --sidebar-bg: #2c3e50;
+  --sidebar-text: #ecf0f1;
+  --sidebar-hover: #3498db;
+  --sidebar-active: #1abc9c;
+  --content-bg: #ffffff;
+  --text: #2c3e50;
+  --heading: #2c3e50;
+  --code-bg: #f0f3f5;
+  --border: #dee2e6;
+  --table-header: #34495e;
+  --table-header-text: #ffffff;
+  --table-alt: #f8f9fa;
+  --link: #2980b9;
+  --accent: #1abc9c;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  display: flex;
+  min-height: 100vh;
+}
+nav {
+  width: 280px;
+  min-width: 280px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  padding: 20px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  z-index: 100;
+}
+nav .logo {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 10px;
+}
+nav .logo h1 { font-size: 18px; color: var(--accent); }
+nav .logo p { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+nav ul { list-style: none; }
+nav ul li a {
+  display: block;
+  padding: 8px 20px;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.2s, border-left 0.2s;
+  border-left: 3px solid transparent;
+}
+nav ul li a:hover {
+  background: rgba(255,255,255,0.05);
+  border-left-color: var(--sidebar-hover);
+}
+nav ul li.section-title {
+  padding: 15px 20px 5px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.5;
+}
+main {
+  margin-left: 280px;
+  flex: 1;
+  padding: 40px;
+  max-width: 1000px;
+}
+h2 {
+  color: var(--heading);
+  font-size: 28px;
+  margin: 40px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent);
+}
+h2:first-of-type { margin-top: 0; }
+h3 {
+  color: var(--heading);
+  font-size: 20px;
+  margin: 30px 0 15px;
+}
+h4 {
+  color: var(--heading);
+  font-size: 16px;
+  margin: 20px 0 10px;
+}
+p { margin: 10px 0; }
+code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 15px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0 25px;
+  font-size: 14px;
+}
+th {
+  background: var(--table-header);
+  color: var(--table-header-text);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+}
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: var(--table-alt); }
+td code { font-size: 12px; white-space: nowrap; }
+.note {
+  background: #eaf6ff;
+  border-left: 4px solid #3498db;
+  padding: 12px 16px;
+  margin: 15px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+}
+.note strong { color: #2980b9; }
+.header-bar {
+  background: linear-gradient(135deg, #2c3e50, #3498db);
+  color: white;
+  padding: 30px 40px;
+  margin: -40px -40px 40px;
+  border-radius: 0;
+}
+.header-bar h1 { font-size: 32px; margin-bottom: 8px; }
+.header-bar p { opacity: 0.9; font-size: 16px; }
+.badge {
+  display: inline-block;
+  background: var(--accent);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.constants {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 10px 0 20px;
+  font-size: 13px;
+}
+.constants strong { display: block; margin-bottom: 4px; }
+@media (max-width: 900px) {
+  nav { display: none; }
+  main { margin-left: 0; padding: 20px; }
+  .header-bar { margin: -20px -20px 20px; padding: 20px; }
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">
+    <h1>MSX BASIC Library</h1>
+    <p>for Z88DK - APIリファレンス</p>
+  </div>
+  <ul>
+    <li class="section-title">はじめに</li>
+    <li><a href="#overview">概要</a></li>
+    <li><a href="#quickstart">クイックスタート</a></li>
+    <li class="section-title">APIリファレンス</li>
+    <li><a href="#screen">画面制御</a></li>
+    <li><a href="#graphics">グラフィックス</a></li>
+    <li><a href="#sprites">スプライト</a></li>
+    <li><a href="#copy">COPY / ページ</a></li>
+    <li><a href="#sound">サウンド</a></li>
+    <li><a href="#input">入力</a></li>
+    <li><a href="#string">文字列関数</a></li>
+    <li><a href="#math">数学関数</a></li>
+    <li><a href="#system">システム</a></li>
+    <li><a href="#vdp">VDP直接アクセス</a></li>
+    <li class="section-title">付録</li>
+    <li><a href="#examples">サンプル</a></li>
+    <li><a href="#technical">技術情報</a></li>
+    <li><a href="#license">ライセンス</a></li>
+  </ul>
+</nav>
+<main>
+
+<div class="header-bar">
+  <h1>MSX BASIC Library for Z88DK</h1>
+  <p>APIリファレンスマニュアル</p>
+</div>
+
+<!-- 概要 -->
+<h2 id="overview">概要</h2>
+<p>MSX BASICのコマンドや関数をZ88DKのC言語から利用できるライブラリです。BASIC風のAPIでMSXプログラムをCで記述できます。</p>
+
+<h3>対応機種</h3>
+<ul>
+  <li>MSX1 (TMS9918)</li>
+  <li>MSX2 (V9938)</li>
+  <li>MSX2+ (V9958)</li>
+  <li>MSX turbo R</li>
+</ul>
+
+<h3>必要環境</h3>
+<ul>
+  <li><a href="https://z88dk.org/">Z88DK</a> (最新のnightly build推奨)</li>
+  <li>MSXエミュレータ (<a href="https://openmsx.org/">openMSX</a>, blueMSX 等)</li>
+</ul>
+
+<!-- クイックスタート -->
+<h2 id="quickstart">クイックスタート</h2>
+
+<h3>ライブラリのビルド</h3>
+<pre><code>build.bat</code></pre>
+
+<h3>サンプルのビルド</h3>
+<pre><code>build_sample.bat 01_hello</code></pre>
+
+<h3>プログラムのコンパイル</h3>
+<pre><code>zcc +msx -vn -O3 -compiler=sccz80 -lm ^
+    -Iinclude -Llib -lmsxbasic ^
+    -subtype=rom your_program.c -o your_program -create-app</code></pre>
+
+<h3>Hello World</h3>
+<pre><code>#include &lt;msxbasic/msxbasic.h&gt;
+
+void main(void) {
+    basic_screen(1);
+    basic_color(15, 1, 1);
+    basic_cls();
+    basic_print("Hello, MSX World!");
+    basic_wait_key();
+    while (1);
+}</code></pre>
+
+<!-- 画面制御 -->
+<h2 id="screen">画面制御 <code>screen.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>CLS</code></td><td><code>basic_cls()</code></td><td>画面クリア</td></tr>
+<tr><td><code>SCREEN n</code></td><td><code>basic_screen(mode)</code></td><td>画面モード設定 (0-12)</td></tr>
+<tr><td><code>SCREEN n,s,k</code></td><td><code>basic_screen_ex(mode, sprite, click)</code></td><td>画面モード設定（拡張）</td></tr>
+<tr><td><code>COLOR f,b,d</code></td><td><code>basic_color(fg, bg, border)</code></td><td>色設定</td></tr>
+<tr><td><code>COLOR f</code></td><td><code>basic_color_fg(fg)</code></td><td>前景色のみ設定</td></tr>
+<tr><td><code>LOCATE x,y</code></td><td><code>basic_locate(x, y)</code></td><td>カーソル移動 (0起点)</td></tr>
+<tr><td><code>LOCATE x,y,c</code></td><td><code>basic_locate_ex(x, y, cursor)</code></td><td>カーソル移動+表示設定</td></tr>
+<tr><td><code>PRINT</code></td><td><code>basic_print(s)</code></td><td>文字列表示</td></tr>
+<tr><td><code>PRINT</code></td><td><code>basic_println(s)</code></td><td>文字列表示+改行</td></tr>
+<tr><td><code>PRINT n</code></td><td><code>basic_print_int(n)</code></td><td>整数表示</td></tr>
+<tr><td><code>PRINT CHR$(c)</code></td><td><code>basic_print_char(c)</code></td><td>文字表示</td></tr>
+<tr><td><code>WIDTH n</code></td><td><code>basic_width(w)</code></td><td>画面幅設定</td></tr>
+<tr><td><code>CSRLIN</code></td><td><code>basic_csrlin()</code></td><td>カーソル行取得 (1起点)</td></tr>
+<tr><td><code>POS(0)</code></td><td><code>basic_pos(0)</code></td><td>カーソル列取得 (1起点)</td></tr>
+<tr><td><code>TAB(n)</code></td><td><code>basic_tab(n)</code></td><td>指定列へ移動</td></tr>
+<tr><td><code>SPC(n)</code></td><td><code>basic_spc(n)</code></td><td>n個のスペース出力</td></tr>
+<tr><td><code>SCREEN$(x,y)</code></td><td><code>basic_screen_char(x, y)</code></td><td>画面上の文字を取得</td></tr>
+<tr><td><code>COLOR=(p,r,g,b)</code></td><td><code>basic_set_palette(p, r, g, b)</code></td><td>パレット設定 (MSX2)</td></tr>
+<tr><td><code>PRINT USING</code></td><td><code>basic_print_using_int(dest, fmt, val)</code></td><td>整数のフォーマット出力</td></tr>
+<tr><td><code>PRINT USING</code></td><td><code>basic_print_using_float(dest, fmt, val)</code></td><td>実数のフォーマット出力</td></tr>
+<tr><td><code>PRINT USING</code></td><td><code>basic_print_using_str(dest, fmt, val)</code></td><td>文字列のフォーマット出力</td></tr>
+<tr><td><code>WAIT</code></td><td><code>basic_wait(port, and, xor)</code></td><td>I/Oポート値の待機</td></tr>
+<tr><td>-</td><td><code>basic_get_screen_mode()</code></td><td>現在の画面モード取得</td></tr>
+<tr><td>-</td><td><code>basic_cursor(visible)</code></td><td>カーソル表示/非表示</td></tr>
+</table>
+
+<!-- グラフィックス -->
+<h2 id="graphics">グラフィックス <code>graphics.h</code></h2>
+
+<h3>描画</h3>
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>PSET (x,y),c</code></td><td><code>basic_pset(x, y, color)</code></td><td>点を打つ</td></tr>
+<tr><td><code>PSET (x,y)</code></td><td><code>basic_pset_c(x, y)</code></td><td>点を打つ（前景色）</td></tr>
+<tr><td><code>PSET STEP(dx,dy)</code></td><td><code>basic_pset_step(dx, dy, color)</code></td><td>相対座標で点を打つ</td></tr>
+<tr><td><code>PRESET (x,y)</code></td><td><code>basic_preset(x, y)</code></td><td>点を消す（背景色）</td></tr>
+<tr><td><code>LINE (x1,y1)-(x2,y2),c</code></td><td><code>basic_line(x1, y1, x2, y2, color)</code></td><td>線描画</td></tr>
+<tr><td><code>LINE ...,B</code></td><td><code>basic_box(x1, y1, x2, y2, color)</code></td><td>矩形描画</td></tr>
+<tr><td><code>LINE ...,BF</code></td><td><code>basic_boxfill(x1, y1, x2, y2, color)</code></td><td>塗りつぶし矩形</td></tr>
+<tr><td><code>CIRCLE (x,y),r,c</code></td><td><code>basic_circle(x, y, r, color)</code></td><td>円描画</td></tr>
+<tr><td><code>CIRCLE ...,s,e,a</code></td><td><code>basic_circle_ex(x, y, r, c, start, end, aspect)</code></td><td>円弧/楕円描画</td></tr>
+<tr><td>-</td><td><code>basic_ellipse(x, y, rx, ry, color)</code></td><td>楕円描画</td></tr>
+<tr><td>-</td><td><code>basic_circle_fill(x, y, r, color)</code></td><td>塗りつぶし円</td></tr>
+<tr><td>-</td><td><code>basic_ellipse_fill(x, y, rx, ry, color)</code></td><td>塗りつぶし楕円</td></tr>
+<tr><td><code>PAINT (x,y),c,b</code></td><td><code>basic_paint(x, y, color, border)</code></td><td>塗りつぶし</td></tr>
+<tr><td><code>PAINT (x,y),c</code></td><td><code>basic_paint_c(x, y, color)</code></td><td>塗りつぶし（色=境界色）</td></tr>
+<tr><td><code>DRAW cmd$</code></td><td><code>basic_draw(cmd)</code></td><td>DRAWコマンド実行</td></tr>
+<tr><td><code>POINT(x,y)</code></td><td><code>basic_point(x, y)</code></td><td>点の色を取得</td></tr>
+<tr><td>-</td><td><code>basic_init_grp()</code></td><td>SCREEN 2カラーテーブル初期化</td></tr>
+</table>
+
+<div class="constants">
+<strong>DRAWコマンド一覧:</strong>
+<code>U</code>(上), <code>D</code>(下), <code>L</code>(左), <code>R</code>(右),
+<code>E</code>(右上), <code>F</code>(右下), <code>G</code>(左下), <code>H</code>(左上),
+<code>M</code>x,y(移動), <code>B</code>(ペンアップ), <code>N</code>(位置更新なし),
+<code>C</code>n(色変更), <code>A</code>n(角度 0-3), <code>S</code>n(スケール)
+</div>
+
+<h3>GET/PUT ブロック操作</h3>
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td>-</td><td><code>basic_get_size(w, h)</code></td><td>必要バッファサイズ計算</td></tr>
+<tr><td><code>GET (x1,y1)-(x2,y2),A</code></td><td><code>basic_get(x1, y1, x2, y2, buf)</code></td><td>画面領域をバッファに保存</td></tr>
+<tr><td><code>PUT (x,y),A,op</code></td><td><code>basic_put(x, y, buf, op)</code></td><td>バッファから画面に復元</td></tr>
+</table>
+
+<div class="constants">
+<strong>PUT操作モード:</strong>
+<code>PUT_PSET</code>(0:上書き), <code>PUT_AND</code>(1), <code>PUT_OR</code>(2), <code>PUT_XOR</code>(3), <code>PUT_PRESET</code>(4:反転)
+</div>
+
+<!-- スプライト -->
+<h2 id="sprites">スプライト</h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>SCREEN n,size</code></td><td><code>basic_sprite_size(size)</code></td><td>スプライトサイズ設定 (0-3)</td></tr>
+<tr><td><code>SPRITE$(n)=pat$</code></td><td><code>basic_sprite_pattern(n, data)</code></td><td>スプライトパターン定義</td></tr>
+<tr><td><code>PUT SPRITE n,(x,y),c,p</code></td><td><code>basic_put_sprite(n, x, y, color, pat)</code></td><td>スプライト表示</td></tr>
+<tr><td>-</td><td><code>basic_sprite_off(n)</code></td><td>スプライト非表示</td></tr>
+<tr><td>-</td><td><code>basic_sprites_off()</code></td><td>全スプライト非表示</td></tr>
+<tr><td>-</td><td><code>basic_sprite_collision()</code></td><td>衝突判定</td></tr>
+</table>
+
+<!-- COPY / ページ -->
+<h2 id="copy">COPY / ページ <span class="badge">MSX2</span></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>COPY</code></td><td><code>basic_copy(sx, sy, w, h, dx, dy)</code></td><td>画面領域コピー</td></tr>
+<tr><td><code>COPY ...TO ...,page</code></td><td><code>basic_copy_page(sx, sy, w, h, sp, dx, dy, dp)</code></td><td>ページ間コピー</td></tr>
+<tr><td><code>SET PAGE d,a</code></td><td><code>basic_set_page(display, active)</code></td><td>表示/アクティブページ設定</td></tr>
+</table>
+
+<!-- サウンド -->
+<h2 id="sound">サウンド <code>sound.h</code></h2>
+
+<h3>基本サウンド</h3>
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>BEEP</code></td><td><code>basic_beep()</code></td><td>ビープ音</td></tr>
+<tr><td><code>SOUND r,v</code></td><td><code>basic_sound(reg, val)</code></td><td>PSGレジスタ書き込み</td></tr>
+<tr><td>-</td><td><code>basic_sound_read(reg)</code></td><td>PSGレジスタ読み出し</td></tr>
+<tr><td>-</td><td><code>basic_sound_off()</code></td><td>全チャンネル消音</td></tr>
+</table>
+
+<h3>音楽 (MML)</h3>
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>PLAY s$</code></td><td><code>basic_play(mml)</code></td><td>MML演奏（チャンネルA）</td></tr>
+<tr><td><code>PLAY a$,b$,c$</code></td><td><code>basic_play_3ch(a, b, c)</code></td><td>3チャンネル同時演奏</td></tr>
+<tr><td>-</td><td><code>basic_play_note(ch, note, oct, dur)</code></td><td>単音再生</td></tr>
+</table>
+
+<div class="constants">
+<strong>MMLコマンド:</strong>
+<code>C</code>-<code>B</code>(音名), <code>R</code>(休符), <code>O</code>n(オクターブ), <code>L</code>n(音長),
+<code>T</code>n(テンポ), <code>V</code>n(音量), <code>Q</code>n(ゲートタイム),
+<code>&lt;</code> <code>&gt;</code>(オクターブ上下), <code>#</code>/<code>+</code>(シャープ), <code>-</code>(フラット), <code>.</code>(付点)
+</div>
+
+<h3>トーン制御</h3>
+<table>
+<tr><th>C関数</th><th>説明</th></tr>
+<tr><td><code>basic_set_tone(ch, freq)</code></td><td>チャンネル周波数設定</td></tr>
+<tr><td><code>basic_set_volume(ch, vol)</code></td><td>チャンネル音量設定 (0-15)</td></tr>
+<tr><td><code>basic_set_noise(freq)</code></td><td>ノイズ周波数設定</td></tr>
+<tr><td><code>basic_set_mixer(tone, noise)</code></td><td>トーン/ノイズ有効化設定</td></tr>
+<tr><td><code>basic_set_envelope(period, shape)</code></td><td>エンベロープ設定</td></tr>
+</table>
+
+<h3>効果音</h3>
+<table>
+<tr><th>C関数</th><th>説明</th></tr>
+<tr><td><code>basic_sfx_explosion()</code></td><td>爆発音</td></tr>
+<tr><td><code>basic_sfx_laser()</code></td><td>レーザー音</td></tr>
+<tr><td><code>basic_sfx_jump()</code></td><td>ジャンプ音</td></tr>
+<tr><td><code>basic_sfx_coin()</code></td><td>コイン取得音</td></tr>
+<tr><td><code>basic_sfx_hit()</code></td><td>ヒット音</td></tr>
+</table>
+
+<!-- 入力 -->
+<h2 id="input">入力 <code>input.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>INKEY$</code></td><td><code>basic_inkey()</code></td><td>キー入力（ノンブロック）</td></tr>
+<tr><td><code>INPUT$(n)</code></td><td><code>basic_input_str(buf, n)</code></td><td>n文字入力</td></tr>
+<tr><td><code>INPUT a$</code></td><td><code>basic_input_line(buf, max)</code></td><td>1行入力</td></tr>
+<tr><td><code>STICK(n)</code></td><td><code>basic_stick(device)</code></td><td>ジョイスティック方向 (0-8)</td></tr>
+<tr><td><code>STRIG(n)</code></td><td><code>basic_strig(button)</code></td><td>トリガーボタン (0/-1)</td></tr>
+<tr><td>-</td><td><code>basic_strig_bool(button)</code></td><td>トリガーボタン (0/1)</td></tr>
+<tr><td><code>PADDLE(n)</code></td><td><code>basic_paddle(n)</code></td><td>パドル位置</td></tr>
+<tr><td><code>PEEK(a)</code></td><td><code>basic_peek(addr)</code></td><td>メモリ1バイト読み出し</td></tr>
+<tr><td><code>POKE a,v</code></td><td><code>basic_poke(addr, val)</code></td><td>メモリ1バイト書き込み</td></tr>
+<tr><td>-</td><td><code>basic_peek16(addr)</code></td><td>メモリ2バイト読み出し</td></tr>
+<tr><td>-</td><td><code>basic_poke16(addr, val)</code></td><td>メモリ2バイト書き込み</td></tr>
+<tr><td><code>INP(p)</code></td><td><code>basic_inp(port)</code></td><td>I/Oポート読み出し</td></tr>
+<tr><td><code>OUT p,v</code></td><td><code>basic_out(port, val)</code></td><td>I/Oポート書き込み</td></tr>
+<tr><td>-</td><td><code>basic_wait_key()</code></td><td>キー入力待ち</td></tr>
+<tr><td>-</td><td><code>basic_key_pressed(row, bit)</code></td><td>特定キーの押下判定</td></tr>
+<tr><td>-</td><td><code>basic_clear_key_buffer()</code></td><td>キーバッファクリア</td></tr>
+<tr><td><code>KEY n,s$</code></td><td><code>basic_key_def(n, str)</code></td><td>ファンクションキー定義</td></tr>
+<tr><td><code>KEY ON/OFF</code></td><td><code>basic_key_display(show)</code></td><td>ファンクションキー表示</td></tr>
+</table>
+
+<div class="constants">
+<strong>STICK定数:</strong>
+<code>STICK_KEYBOARD</code>(0), <code>STICK_JOY1</code>(1), <code>STICK_JOY2</code>(2)
+</div>
+<div class="constants">
+<strong>STRIG定数:</strong>
+<code>STRIG_SPACE</code>(0), <code>STRIG_JOY1_A</code>(1), <code>STRIG_JOY2_A</code>(2), <code>STRIG_JOY1_B</code>(3), <code>STRIG_JOY2_B</code>(4)
+</div>
+
+<!-- 文字列関数 -->
+<h2 id="string">文字列関数 <code>bstring.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>LEN(s$)</code></td><td><code>basic_len(s)</code></td><td>文字列の長さ</td></tr>
+<tr><td><code>LEFT$(s$,n)</code></td><td><code>basic_left(dest, src, n)</code></td><td>左からn文字抽出</td></tr>
+<tr><td><code>RIGHT$(s$,n)</code></td><td><code>basic_right(dest, src, n)</code></td><td>右からn文字抽出</td></tr>
+<tr><td><code>MID$(s$,p,n)</code></td><td><code>basic_mid(dest, src, pos, n)</code></td><td>中間文字列抽出</td></tr>
+<tr><td><code>MID$(s$,p,n)=r$</code></td><td><code>basic_mid_replace(dest, pos, n, src)</code></td><td>文字列置換</td></tr>
+<tr><td><code>ASC(s$)</code></td><td><code>basic_asc(s)</code></td><td>文字コード取得</td></tr>
+<tr><td><code>CHR$(n)</code></td><td><code>basic_chr(dest, code)</code></td><td>文字コードから文字生成</td></tr>
+<tr><td><code>STR$(n)</code></td><td><code>basic_str(dest, n)</code></td><td>整数を文字列に変換</td></tr>
+<tr><td><code>STR$(n)</code></td><td><code>basic_str_long(dest, n)</code></td><td>長整数を文字列に変換</td></tr>
+<tr><td><code>STR$(n)</code></td><td><code>basic_str_float(dest, n)</code></td><td>実数を文字列に変換</td></tr>
+<tr><td><code>VAL(s$)</code></td><td><code>basic_val(s)</code></td><td>文字列を整数に変換</td></tr>
+<tr><td><code>VAL(s$)</code></td><td><code>basic_val_long(s)</code></td><td>文字列を長整数に変換</td></tr>
+<tr><td><code>VAL(s$)</code></td><td><code>basic_val_float(s)</code></td><td>文字列を実数に変換（指数表記対応）</td></tr>
+<tr><td><code>HEX$(n)</code></td><td><code>basic_hex(dest, n)</code></td><td>16進文字列に変換</td></tr>
+<tr><td><code>BIN$(n)</code></td><td><code>basic_bin(dest, n)</code></td><td>2進文字列に変換</td></tr>
+<tr><td><code>OCT$(n)</code></td><td><code>basic_oct(dest, n)</code></td><td>8進文字列に変換</td></tr>
+<tr><td><code>INSTR(s$,t$)</code></td><td><code>basic_instr(s, search, start)</code></td><td>文字列検索</td></tr>
+<tr><td><code>STRING$(n,c)</code></td><td><code>basic_string(dest, n, code)</code></td><td>文字の繰り返し</td></tr>
+<tr><td><code>SPACE$(n)</code></td><td><code>basic_space(dest, n)</code></td><td>スペース文字列生成</td></tr>
+<tr><td>-</td><td><code>basic_ucase(s)</code></td><td>大文字変換（その場）</td></tr>
+<tr><td>-</td><td><code>basic_lcase(s)</code></td><td>小文字変換（その場）</td></tr>
+<tr><td>-</td><td><code>basic_strcmp(s1, s2)</code></td><td>文字列比較</td></tr>
+<tr><td>-</td><td><code>basic_concat(dest, s1, s2)</code></td><td>文字列結合</td></tr>
+<tr><td>-</td><td><code>basic_jis_to_sjis(dest, src)</code></td><td>JIS → Shift-JIS変換</td></tr>
+<tr><td>-</td><td><code>basic_sjis_to_jis(dest, src)</code></td><td>Shift-JIS → JIS変換</td></tr>
+</table>
+
+<!-- 数学関数 -->
+<h2 id="math">数学関数 <code>bmath.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>ABS(n)</code></td><td><code>basic_abs(n)</code> / <code>basic_abs_float(n)</code></td><td>絶対値</td></tr>
+<tr><td><code>SGN(n)</code></td><td><code>basic_sgn(n)</code> / <code>basic_sgn_float(n)</code></td><td>符号 (-1, 0, 1)</td></tr>
+<tr><td><code>INT(n)</code></td><td><code>basic_int(n)</code></td><td>切り捨て (floor)</td></tr>
+<tr><td><code>FIX(n)</code></td><td><code>basic_fix(n)</code></td><td>ゼロ方向への切り捨て</td></tr>
+<tr><td><code>CINT(n)</code></td><td><code>basic_cint(n)</code></td><td>四捨五入して整数化</td></tr>
+<tr><td><code>CSNG(n)</code></td><td><code>basic_csng(n)</code></td><td>単精度に変換</td></tr>
+<tr><td><code>CDBL(n)</code></td><td><code>basic_cdbl(n)</code></td><td>倍精度に変換</td></tr>
+<tr><td><code>SQR(n)</code></td><td><code>basic_sqr(n)</code></td><td>平方根</td></tr>
+<tr><td><code>SIN(n)</code></td><td><code>basic_sin(n)</code></td><td>正弦（ラジアン）</td></tr>
+<tr><td><code>COS(n)</code></td><td><code>basic_cos(n)</code></td><td>余弦（ラジアン）</td></tr>
+<tr><td><code>TAN(n)</code></td><td><code>basic_tan(n)</code></td><td>正接（ラジアン）</td></tr>
+<tr><td><code>ATN(n)</code></td><td><code>basic_atn(n)</code></td><td>逆正接</td></tr>
+<tr><td><code>LOG(n)</code></td><td><code>basic_log(n)</code></td><td>自然対数</td></tr>
+<tr><td>-</td><td><code>basic_log10(n)</code></td><td>常用対数</td></tr>
+<tr><td><code>EXP(n)</code></td><td><code>basic_exp(n)</code></td><td>指数関数 (e^n)</td></tr>
+<tr><td>-</td><td><code>basic_pow(base, exp)</code></td><td>べき乗</td></tr>
+<tr><td><code>RND(n)</code></td><td><code>basic_rnd(n)</code></td><td>乱数 (0.0〜1.0)</td></tr>
+<tr><td><code>RANDOMIZE</code></td><td><code>basic_randomize(seed)</code></td><td>乱数シード設定</td></tr>
+<tr><td><code>RANDOMIZE TIME</code></td><td><code>basic_randomize_time()</code></td><td>タイマーからシード設定</td></tr>
+<tr><td>-</td><td><code>basic_rnd_range(min, max)</code></td><td>範囲指定の整数乱数</td></tr>
+<tr><td>-</td><td><code>basic_min(a, b)</code></td><td>最小値</td></tr>
+<tr><td>-</td><td><code>basic_max(a, b)</code></td><td>最大値</td></tr>
+<tr><td>-</td><td><code>basic_clamp(val, min, max)</code></td><td>範囲内に制限</td></tr>
+<tr><td>-</td><td><code>basic_deg_to_rad(deg)</code></td><td>度→ラジアン変換</td></tr>
+<tr><td>-</td><td><code>basic_rad_to_deg(rad)</code></td><td>ラジアン→度変換</td></tr>
+</table>
+
+<!-- システム -->
+<h2 id="system">システム <code>system.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C関数</th><th>説明</th></tr>
+<tr><td><code>TIME</code></td><td><code>basic_time()</code></td><td>タイマー値取得</td></tr>
+<tr><td><code>TIME=n</code></td><td><code>basic_time_set(n)</code></td><td>タイマー値設定</td></tr>
+<tr><td><code>VDP(n)</code></td><td><code>basic_vdp(reg)</code></td><td>VDPレジスタシャドウ読み出し</td></tr>
+<tr><td>-</td><td><code>basic_vdp_set(reg, val)</code></td><td>VDPレジスタ書き込み</td></tr>
+<tr><td><code>VDP(-1)</code></td><td><code>basic_vdp_status()</code></td><td>VDPステータス S#0 読み出し</td></tr>
+<tr><td>-</td><td><code>basic_vdp_status_n(reg)</code></td><td>VDPステータス S#n 読み出し (MSX2)</td></tr>
+<tr><td><code>VPEEK(a)</code></td><td><code>basic_vpeek(addr)</code></td><td>VRAM読み出し (16KB)</td></tr>
+<tr><td><code>VPOKE a,v</code></td><td><code>basic_vpoke(addr, val)</code></td><td>VRAM書き込み (16KB)</td></tr>
+<tr><td>-</td><td><code>basic_vpeek_ex(addr)</code></td><td>VRAM読み出し (128KB, MSX2)</td></tr>
+<tr><td>-</td><td><code>basic_vpoke_ex(addr, val)</code></td><td>VRAM書き込み (128KB, MSX2)</td></tr>
+<tr><td><code>BASE(n)</code></td><td><code>basic_base(n)</code></td><td>VRAMベースアドレス取得</td></tr>
+<tr><td>-</td><td><code>basic_vram_fill(addr, val, count)</code></td><td>VRAMブロック充填</td></tr>
+<tr><td>-</td><td><code>basic_vram_write(dest, src, count)</code></td><td>RAM→VRAMブロック転送</td></tr>
+<tr><td>-</td><td><code>basic_vram_read(dest, src, count)</code></td><td>VRAM→RAMブロック転送</td></tr>
+<tr><td>-</td><td><code>basic_wait_vblank()</code></td><td>VBlank待ち</td></tr>
+<tr><td>-</td><td><code>basic_wait_frames(n)</code></td><td>nフレーム待ち</td></tr>
+<tr><td><code>FRE(0)</code></td><td><code>basic_fre()</code></td><td>空きメモリ量</td></tr>
+<tr><td>-</td><td><code>basic_get_msx_type()</code></td><td>MSXタイプ取得 (0-3)</td></tr>
+<tr><td>-</td><td><code>basic_is_msx2()</code></td><td>MSX2以上か判定</td></tr>
+<tr><td>-</td><td><code>basic_is_msx2plus()</code></td><td>MSX2+以上か判定</td></tr>
+<tr><td>-</td><td><code>basic_is_turbo_r()</code></td><td>turbo Rか判定</td></tr>
+<tr><td>-</td><td><code>basic_break_check()</code></td><td>CTRL+STOP判定</td></tr>
+<tr><td>-</td><td><code>basic_break_enable(on)</code></td><td>CTRL+STOP有効/無効</td></tr>
+<tr><td>-</td><td><code>basic_bios_call(addr)</code></td><td>BIOSルーチン呼び出し</td></tr>
+<tr><td>-</td><td><code>basic_slot_read(addr, slot, sub)</code></td><td>スロットからの読み出し</td></tr>
+<tr><td>-</td><td><code>basic_slot_write(addr, slot, sub, val)</code></td><td>スロットへの書き込み</td></tr>
+</table>
+
+<!-- VDP直接アクセス -->
+<h2 id="vdp">VDP直接アクセス <code>vdp.h</code> <span class="badge">MSX2</span></h2>
+
+<p>MSX2/MSX2+向けのV9938/V9958低レベルアクセス:</p>
+
+<table>
+<tr><th>C関数</th><th>説明</th></tr>
+<tr><td><code>vdp_write_reg(reg, val)</code></td><td>VDPレジスタ書き込み</td></tr>
+<tr><td><code>vdp_read_status(reg)</code></td><td>ステータスレジスタ読み出し</td></tr>
+<tr><td><code>vdp_wait_cmd()</code></td><td>コマンド完了待ち</td></tr>
+<tr><td><code>vdp_pset(x, y, color, op)</code></td><td>ピクセル設定（論理演算付き）</td></tr>
+<tr><td><code>vdp_line(x1, y1, x2, y2, color, op)</code></td><td>線描画（論理演算付き）</td></tr>
+<tr><td><code>vdp_fill(x, y, w, h, color)</code></td><td>矩形充填 (HMMV)</td></tr>
+<tr><td><code>vdp_copy(sx, sy, dx, dy, w, h)</code></td><td>矩形コピー (HMMM)</td></tr>
+<tr><td><code>vdp_set_palette(idx, r, g, b)</code></td><td>パレット色設定</td></tr>
+<tr><td><code>vdp_set_display_page(page)</code></td><td>表示ページ設定</td></tr>
+<tr><td><code>vdp_set_active_page(page)</code></td><td>アクティブページ設定</td></tr>
+</table>
+
+<!-- サンプル -->
+<h2 id="examples">サンプルプログラム</h2>
+
+<table>
+<tr><th>ファイル</th><th>内容</th><th>対応機種</th></tr>
+<tr><td><code>01_hello.c</code></td><td>テキスト表示、LOCATE、TAB、SPC、PRINT USING</td><td>MSX1〜</td></tr>
+<tr><td><code>02_graphics.c</code></td><td>PSET、LINE、BOX、CIRCLE、ELLIPSE、塗りつぶし</td><td>MSX1〜</td></tr>
+<tr><td><code>03_graphics_msx2.c</code></td><td>SCREEN 5/7/8、パレット、ページ切替、COPY</td><td>MSX2〜</td></tr>
+<tr><td><code>04_sprite.c</code></td><td>スプライト定義・表示・アニメーション・衝突判定</td><td>MSX1〜</td></tr>
+<tr><td><code>05_sound.c</code></td><td>BEEP、PSG制御、MML演奏、3ch同時演奏、効果音</td><td>MSX1〜</td></tr>
+<tr><td><code>06_input.c</code></td><td>INKEY$、STICK、STRIG、PEEK/POKE、VDPステータス</td><td>MSX1〜</td></tr>
+<tr><td><code>07_draw.c</code></td><td>DRAWコマンド全機能 (U/D/L/R/M/A/S/B/N/C)</td><td>MSX1〜</td></tr>
+<tr><td><code>08_paint.c</code></td><td>PAINT塗りつぶし、GET/PUT、円弧描画</td><td>MSX1〜</td></tr>
+<tr><td><code>09_string.c</code></td><td>文字列関数、型変換、文字列操作</td><td>MSX1〜</td></tr>
+<tr><td><code>10_math.c</code></td><td>数学関数、三角関数、乱数</td><td>MSX1〜</td></tr>
+<tr><td><code>11_system.c</code></td><td>MSX判別、VDP、TIME、VRAM操作、SCREEN$</td><td>MSX1〜</td></tr>
+</table>
+
+<h3>サンプルのビルド</h3>
+<pre><code>build_sample.bat 01_hello</code></pre>
+<p>または手動でコンパイル:</p>
+<pre><code>zcc +msx -vn -O3 -compiler=sccz80 -lm ^
+    -Iinclude -Llib -lmsxbasic ^
+    -subtype=rom examples\01_hello.c -o examples\01_hello -create-app</code></pre>
+
+<!-- 技術情報 -->
+<h2 id="technical">技術情報</h2>
+
+<ul>
+  <li><strong>コンパイラ:</strong> Z88DK <strong>sccz80</strong> バックエンド (<code>-compiler=sccz80</code>)</li>
+  <li><strong>呼び出し規約:</strong> sccz80（左→右プッシュ、<code>uint8_t</code>はスタック上で16ビットに昇格）</li>
+  <li><strong>SCREEN 5-12:</strong> VDPハードウェアコマンドで描画</li>
+  <li><strong>SCREEN 2-4:</strong> BIOSによるソフトウェア描画</li>
+  <li><strong>SCREEN 6:</strong> タイルドパレット方式（色0,1がパレット0,1を共有、色2,3がパレット2,3を共有）</li>
+</ul>
+
+<h3>参考資料</h3>
+<ul>
+  <li><a href="https://github.com/fu-sen/MSX-BASIC">MSX-BASIC コマンドリファレンス</a></li>
+  <li><a href="https://www.msx.org/wiki/">MSX.org Wiki - スクリーンモード</a></li>
+  <li><a href="https://github.com/z88dk/z88dk/wiki/Platform---MSX">Z88DK - MSXプラットフォーム</a></li>
+  <li><a href="https://www.msx.org/wiki/V9938">V9938 技術資料</a></li>
+</ul>
+
+<!-- ライセンス -->
+<h2 id="license">ライセンス</h2>
+<p>MIT License - Copyright (c) UO Soft</p>
+<p>詳細は <a href="../LICENSE">LICENSE</a> を参照してください。</p>
+
+</main>
+</body>
+</html>

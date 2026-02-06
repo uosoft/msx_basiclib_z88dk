@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSX BASIC Library for Z88DK - API Reference</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --sidebar-bg: #2c3e50;
+  --sidebar-text: #ecf0f1;
+  --sidebar-hover: #3498db;
+  --sidebar-active: #1abc9c;
+  --content-bg: #ffffff;
+  --text: #2c3e50;
+  --heading: #2c3e50;
+  --code-bg: #f0f3f5;
+  --border: #dee2e6;
+  --table-header: #34495e;
+  --table-header-text: #ffffff;
+  --table-alt: #f8f9fa;
+  --link: #2980b9;
+  --accent: #1abc9c;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  display: flex;
+  min-height: 100vh;
+}
+nav {
+  width: 280px;
+  min-width: 280px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  padding: 20px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  z-index: 100;
+}
+nav .logo {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 10px;
+}
+nav .logo h1 { font-size: 18px; color: var(--accent); }
+nav .logo p { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+nav ul { list-style: none; }
+nav ul li a {
+  display: block;
+  padding: 8px 20px;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.2s, border-left 0.2s;
+  border-left: 3px solid transparent;
+}
+nav ul li a:hover {
+  background: rgba(255,255,255,0.05);
+  border-left-color: var(--sidebar-hover);
+}
+nav ul li.section-title {
+  padding: 15px 20px 5px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.5;
+}
+main {
+  margin-left: 280px;
+  flex: 1;
+  padding: 40px;
+  max-width: 1000px;
+}
+h2 {
+  color: var(--heading);
+  font-size: 28px;
+  margin: 40px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent);
+}
+h2:first-of-type { margin-top: 0; }
+h3 {
+  color: var(--heading);
+  font-size: 20px;
+  margin: 30px 0 15px;
+}
+h4 {
+  color: var(--heading);
+  font-size: 16px;
+  margin: 20px 0 10px;
+}
+p { margin: 10px 0; }
+code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 15px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0 25px;
+  font-size: 14px;
+}
+th {
+  background: var(--table-header);
+  color: var(--table-header-text);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+}
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: var(--table-alt); }
+td code { font-size: 12px; white-space: nowrap; }
+.note {
+  background: #eaf6ff;
+  border-left: 4px solid #3498db;
+  padding: 12px 16px;
+  margin: 15px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+}
+.note strong { color: #2980b9; }
+.header-bar {
+  background: linear-gradient(135deg, #2c3e50, #3498db);
+  color: white;
+  padding: 30px 40px;
+  margin: -40px -40px 40px;
+  border-radius: 0;
+}
+.header-bar h1 { font-size: 32px; margin-bottom: 8px; }
+.header-bar p { opacity: 0.9; font-size: 16px; }
+.badge {
+  display: inline-block;
+  background: var(--accent);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.constants {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 10px 0 20px;
+  font-size: 13px;
+}
+.constants strong { display: block; margin-bottom: 4px; }
+@media (max-width: 900px) {
+  nav { display: none; }
+  main { margin-left: 0; padding: 20px; }
+  .header-bar { margin: -20px -20px 20px; padding: 20px; }
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">
+    <h1>MSX BASIC Library</h1>
+    <p>for Z88DK - API Reference</p>
+  </div>
+  <ul>
+    <li class="section-title">Getting Started</li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#quickstart">Quick Start</a></li>
+    <li class="section-title">API Reference</li>
+    <li><a href="#screen">Screen Control</a></li>
+    <li><a href="#graphics">Graphics</a></li>
+    <li><a href="#sprites">Sprites</a></li>
+    <li><a href="#copy">COPY / Page</a></li>
+    <li><a href="#sound">Sound</a></li>
+    <li><a href="#input">Input</a></li>
+    <li><a href="#string">String Functions</a></li>
+    <li><a href="#math">Math Functions</a></li>
+    <li><a href="#system">System</a></li>
+    <li><a href="#vdp">VDP Direct Access</a></li>
+    <li class="section-title">Appendix</li>
+    <li><a href="#examples">Examples</a></li>
+    <li><a href="#technical">Technical Notes</a></li>
+    <li><a href="#license">License</a></li>
+  </ul>
+</nav>
+<main>
+
+<div class="header-bar">
+  <h1>MSX BASIC Library for Z88DK</h1>
+  <p>API Reference Manual</p>
+</div>
+
+<!-- Overview -->
+<h2 id="overview">Overview</h2>
+<p>A C library for Z88DK that provides MSX BASIC-compatible commands and functions. Write MSX programs in C using familiar BASIC-like APIs.</p>
+
+<h3>Supported Platforms</h3>
+<ul>
+  <li>MSX1 (TMS9918)</li>
+  <li>MSX2 (V9938)</li>
+  <li>MSX2+ (V9958)</li>
+  <li>MSX turbo R</li>
+</ul>
+
+<h3>Requirements</h3>
+<ul>
+  <li><a href="https://z88dk.org/">Z88DK</a> (latest nightly build recommended)</li>
+  <li>MSX emulator for testing (<a href="https://openmsx.org/">openMSX</a>, blueMSX, etc.)</li>
+</ul>
+
+<!-- Quick Start -->
+<h2 id="quickstart">Quick Start</h2>
+
+<h3>Build the Library</h3>
+<pre><code>build.bat</code></pre>
+
+<h3>Build an Example</h3>
+<pre><code>build_sample.bat 01_hello</code></pre>
+
+<h3>Compile Your Program</h3>
+<pre><code>zcc +msx -vn -O3 -compiler=sccz80 -lm ^
+    -Iinclude -Llib -lmsxbasic ^
+    -subtype=rom your_program.c -o your_program -create-app</code></pre>
+
+<h3>Hello World</h3>
+<pre><code>#include &lt;msxbasic/msxbasic.h&gt;
+
+void main(void) {
+    basic_screen(1);
+    basic_color(15, 1, 1);
+    basic_cls();
+    basic_print("Hello, MSX World!");
+    basic_wait_key();
+    while (1);
+}</code></pre>
+
+<!-- Screen Control -->
+<h2 id="screen">Screen Control <code>screen.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>CLS</code></td><td><code>basic_cls()</code></td><td>Clear screen</td></tr>
+<tr><td><code>SCREEN n</code></td><td><code>basic_screen(mode)</code></td><td>Set screen mode (0-12)</td></tr>
+<tr><td><code>SCREEN n,s,k</code></td><td><code>basic_screen_ex(mode, sprite, click)</code></td><td>Set screen mode with options</td></tr>
+<tr><td><code>COLOR f,b,d</code></td><td><code>basic_color(fg, bg, border)</code></td><td>Set colors</td></tr>
+<tr><td><code>COLOR f</code></td><td><code>basic_color_fg(fg)</code></td><td>Set foreground color only</td></tr>
+<tr><td><code>LOCATE x,y</code></td><td><code>basic_locate(x, y)</code></td><td>Move cursor (0-based)</td></tr>
+<tr><td><code>LOCATE x,y,c</code></td><td><code>basic_locate_ex(x, y, cursor)</code></td><td>Move cursor with visibility</td></tr>
+<tr><td><code>PRINT</code></td><td><code>basic_print(s)</code></td><td>Print string</td></tr>
+<tr><td><code>PRINT</code></td><td><code>basic_println(s)</code></td><td>Print string with newline</td></tr>
+<tr><td><code>PRINT n</code></td><td><code>basic_print_int(n)</code></td><td>Print integer</td></tr>
+<tr><td><code>PRINT CHR$(c)</code></td><td><code>basic_print_char(c)</code></td><td>Print character</td></tr>
+<tr><td><code>WIDTH n</code></td><td><code>basic_width(w)</code></td><td>Set screen width</td></tr>
+<tr><td><code>CSRLIN</code></td><td><code>basic_csrlin()</code></td><td>Get cursor row (1-based)</td></tr>
+<tr><td><code>POS(0)</code></td><td><code>basic_pos(0)</code></td><td>Get cursor column (1-based)</td></tr>
+<tr><td><code>TAB(n)</code></td><td><code>basic_tab(n)</code></td><td>Move cursor to column</td></tr>
+<tr><td><code>SPC(n)</code></td><td><code>basic_spc(n)</code></td><td>Print n spaces</td></tr>
+<tr><td><code>SCREEN$(x,y)</code></td><td><code>basic_screen_char(x, y)</code></td><td>Read character at position</td></tr>
+<tr><td><code>COLOR=(p,r,g,b)</code></td><td><code>basic_set_palette(p, r, g, b)</code></td><td>Set palette (MSX2)</td></tr>
+<tr><td><code>PRINT USING</code></td><td><code>basic_print_using_int(dest, fmt, val)</code></td><td>Format integer</td></tr>
+<tr><td><code>PRINT USING</code></td><td><code>basic_print_using_float(dest, fmt, val)</code></td><td>Format float</td></tr>
+<tr><td><code>PRINT USING</code></td><td><code>basic_print_using_str(dest, fmt, val)</code></td><td>Format string</td></tr>
+<tr><td><code>WAIT</code></td><td><code>basic_wait(port, and, xor)</code></td><td>Wait for I/O port value</td></tr>
+<tr><td>-</td><td><code>basic_get_screen_mode()</code></td><td>Get current screen mode</td></tr>
+<tr><td>-</td><td><code>basic_cursor(visible)</code></td><td>Show/hide cursor</td></tr>
+</table>
+
+<!-- Graphics -->
+<h2 id="graphics">Graphics <code>graphics.h</code></h2>
+
+<h3>Drawing</h3>
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>PSET (x,y),c</code></td><td><code>basic_pset(x, y, color)</code></td><td>Set pixel</td></tr>
+<tr><td><code>PSET (x,y)</code></td><td><code>basic_pset_c(x, y)</code></td><td>Set pixel (foreground color)</td></tr>
+<tr><td><code>PSET STEP(dx,dy)</code></td><td><code>basic_pset_step(dx, dy, color)</code></td><td>Set pixel (relative)</td></tr>
+<tr><td><code>PRESET (x,y)</code></td><td><code>basic_preset(x, y)</code></td><td>Clear pixel (background color)</td></tr>
+<tr><td><code>LINE (x1,y1)-(x2,y2),c</code></td><td><code>basic_line(x1, y1, x2, y2, color)</code></td><td>Draw line</td></tr>
+<tr><td><code>LINE ...,B</code></td><td><code>basic_box(x1, y1, x2, y2, color)</code></td><td>Draw box outline</td></tr>
+<tr><td><code>LINE ...,BF</code></td><td><code>basic_boxfill(x1, y1, x2, y2, color)</code></td><td>Draw filled box</td></tr>
+<tr><td><code>CIRCLE (x,y),r,c</code></td><td><code>basic_circle(x, y, r, color)</code></td><td>Draw circle</td></tr>
+<tr><td><code>CIRCLE ...,s,e,a</code></td><td><code>basic_circle_ex(x, y, r, c, start, end, aspect)</code></td><td>Draw arc/ellipse</td></tr>
+<tr><td>-</td><td><code>basic_ellipse(x, y, rx, ry, color)</code></td><td>Draw ellipse</td></tr>
+<tr><td>-</td><td><code>basic_circle_fill(x, y, r, color)</code></td><td>Draw filled circle</td></tr>
+<tr><td>-</td><td><code>basic_ellipse_fill(x, y, rx, ry, color)</code></td><td>Draw filled ellipse</td></tr>
+<tr><td><code>PAINT (x,y),c,b</code></td><td><code>basic_paint(x, y, color, border)</code></td><td>Flood fill</td></tr>
+<tr><td><code>PAINT (x,y),c</code></td><td><code>basic_paint_c(x, y, color)</code></td><td>Flood fill (color=border)</td></tr>
+<tr><td><code>DRAW cmd$</code></td><td><code>basic_draw(cmd)</code></td><td>Execute DRAW commands</td></tr>
+<tr><td><code>POINT(x,y)</code></td><td><code>basic_point(x, y)</code></td><td>Get pixel color</td></tr>
+<tr><td>-</td><td><code>basic_init_grp()</code></td><td>Initialize SCREEN 2 color table</td></tr>
+</table>
+
+<div class="constants">
+<strong>DRAW Command Reference:</strong>
+<code>U</code>(up), <code>D</code>(down), <code>L</code>(left), <code>R</code>(right),
+<code>E</code>(up-right), <code>F</code>(down-right), <code>G</code>(down-left), <code>H</code>(up-left),
+<code>M</code>x,y (move), <code>B</code>(pen up), <code>N</code>(no update),
+<code>C</code>n (color), <code>A</code>n (angle 0-3), <code>S</code>n (scale)
+</div>
+
+<h3>GET/PUT Block Operations</h3>
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td>-</td><td><code>basic_get_size(w, h)</code></td><td>Calculate buffer size needed</td></tr>
+<tr><td><code>GET (x1,y1)-(x2,y2),A</code></td><td><code>basic_get(x1, y1, x2, y2, buf)</code></td><td>Save screen area</td></tr>
+<tr><td><code>PUT (x,y),A,op</code></td><td><code>basic_put(x, y, buf, op)</code></td><td>Restore screen area</td></tr>
+</table>
+
+<div class="constants">
+<strong>PUT Operations:</strong>
+<code>PUT_PSET</code>(0), <code>PUT_AND</code>(1), <code>PUT_OR</code>(2), <code>PUT_XOR</code>(3), <code>PUT_PRESET</code>(4)
+</div>
+
+<!-- Sprites -->
+<h2 id="sprites">Sprites</h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>SCREEN n,size</code></td><td><code>basic_sprite_size(size)</code></td><td>Set sprite size (0-3)</td></tr>
+<tr><td><code>SPRITE$(n)=pat$</code></td><td><code>basic_sprite_pattern(n, data)</code></td><td>Define sprite pattern</td></tr>
+<tr><td><code>PUT SPRITE n,(x,y),c,p</code></td><td><code>basic_put_sprite(n, x, y, color, pat)</code></td><td>Display sprite</td></tr>
+<tr><td>-</td><td><code>basic_sprite_off(n)</code></td><td>Hide sprite</td></tr>
+<tr><td>-</td><td><code>basic_sprites_off()</code></td><td>Hide all sprites</td></tr>
+<tr><td>-</td><td><code>basic_sprite_collision()</code></td><td>Check sprite collision</td></tr>
+</table>
+
+<!-- COPY / Page -->
+<h2 id="copy">COPY / Page <span class="badge">MSX2</span></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>COPY</code></td><td><code>basic_copy(sx, sy, w, h, dx, dy)</code></td><td>Copy screen area</td></tr>
+<tr><td><code>COPY ...TO ...,page</code></td><td><code>basic_copy_page(sx, sy, w, h, sp, dx, dy, dp)</code></td><td>Copy between pages</td></tr>
+<tr><td><code>SET PAGE d,a</code></td><td><code>basic_set_page(display, active)</code></td><td>Set display/active page</td></tr>
+</table>
+
+<!-- Sound -->
+<h2 id="sound">Sound <code>sound.h</code></h2>
+
+<h3>Basic Sound</h3>
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>BEEP</code></td><td><code>basic_beep()</code></td><td>Play beep</td></tr>
+<tr><td><code>SOUND r,v</code></td><td><code>basic_sound(reg, val)</code></td><td>Write PSG register</td></tr>
+<tr><td>-</td><td><code>basic_sound_read(reg)</code></td><td>Read PSG register</td></tr>
+<tr><td>-</td><td><code>basic_sound_off()</code></td><td>Silence all channels</td></tr>
+</table>
+
+<h3>Music (MML)</h3>
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>PLAY s$</code></td><td><code>basic_play(mml)</code></td><td>Play MML on channel A</td></tr>
+<tr><td><code>PLAY a$,b$,c$</code></td><td><code>basic_play_3ch(a, b, c)</code></td><td>Play 3-channel simultaneous</td></tr>
+<tr><td>-</td><td><code>basic_play_note(ch, note, oct, dur)</code></td><td>Play single note</td></tr>
+</table>
+
+<div class="constants">
+<strong>MML Reference:</strong>
+<code>C</code>-<code>B</code> (notes), <code>R</code> (rest), <code>O</code>n (octave), <code>L</code>n (length),
+<code>T</code>n (tempo), <code>V</code>n (volume), <code>Q</code>n (gate time),
+<code>&lt;</code> <code>&gt;</code> (octave shift), <code>#</code>/<code>+</code> (sharp), <code>-</code> (flat), <code>.</code> (dotted)
+</div>
+
+<h3>Tone Control</h3>
+<table>
+<tr><th>C Function</th><th>Description</th></tr>
+<tr><td><code>basic_set_tone(ch, freq)</code></td><td>Set channel frequency</td></tr>
+<tr><td><code>basic_set_volume(ch, vol)</code></td><td>Set channel volume (0-15)</td></tr>
+<tr><td><code>basic_set_noise(freq)</code></td><td>Set noise frequency</td></tr>
+<tr><td><code>basic_set_mixer(tone, noise)</code></td><td>Enable/disable tone/noise</td></tr>
+<tr><td><code>basic_set_envelope(period, shape)</code></td><td>Set envelope</td></tr>
+</table>
+
+<h3>Sound Effects</h3>
+<table>
+<tr><th>C Function</th><th>Description</th></tr>
+<tr><td><code>basic_sfx_explosion()</code></td><td>Explosion effect</td></tr>
+<tr><td><code>basic_sfx_laser()</code></td><td>Laser/shoot effect</td></tr>
+<tr><td><code>basic_sfx_jump()</code></td><td>Jump effect</td></tr>
+<tr><td><code>basic_sfx_coin()</code></td><td>Coin/pickup effect</td></tr>
+<tr><td><code>basic_sfx_hit()</code></td><td>Hit/damage effect</td></tr>
+</table>
+
+<!-- Input -->
+<h2 id="input">Input <code>input.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>INKEY$</code></td><td><code>basic_inkey()</code></td><td>Non-blocking key read</td></tr>
+<tr><td><code>INPUT$(n)</code></td><td><code>basic_input_str(buf, n)</code></td><td>Read n characters</td></tr>
+<tr><td><code>INPUT a$</code></td><td><code>basic_input_line(buf, max)</code></td><td>Read line</td></tr>
+<tr><td><code>STICK(n)</code></td><td><code>basic_stick(device)</code></td><td>Read joystick (0-8)</td></tr>
+<tr><td><code>STRIG(n)</code></td><td><code>basic_strig(button)</code></td><td>Read trigger (0/-1)</td></tr>
+<tr><td>-</td><td><code>basic_strig_bool(button)</code></td><td>Read trigger (0/1)</td></tr>
+<tr><td><code>PADDLE(n)</code></td><td><code>basic_paddle(n)</code></td><td>Read paddle position</td></tr>
+<tr><td><code>PEEK(a)</code></td><td><code>basic_peek(addr)</code></td><td>Read memory byte</td></tr>
+<tr><td><code>POKE a,v</code></td><td><code>basic_poke(addr, val)</code></td><td>Write memory byte</td></tr>
+<tr><td>-</td><td><code>basic_peek16(addr)</code></td><td>Read memory word</td></tr>
+<tr><td>-</td><td><code>basic_poke16(addr, val)</code></td><td>Write memory word</td></tr>
+<tr><td><code>INP(p)</code></td><td><code>basic_inp(port)</code></td><td>Read I/O port</td></tr>
+<tr><td><code>OUT p,v</code></td><td><code>basic_out(port, val)</code></td><td>Write I/O port</td></tr>
+<tr><td>-</td><td><code>basic_wait_key()</code></td><td>Wait for key press</td></tr>
+<tr><td>-</td><td><code>basic_key_pressed(row, bit)</code></td><td>Check specific key</td></tr>
+<tr><td>-</td><td><code>basic_clear_key_buffer()</code></td><td>Clear keyboard buffer</td></tr>
+<tr><td><code>KEY n,s$</code></td><td><code>basic_key_def(n, str)</code></td><td>Define function key</td></tr>
+<tr><td><code>KEY ON/OFF</code></td><td><code>basic_key_display(show)</code></td><td>Show/hide function keys</td></tr>
+</table>
+
+<div class="constants">
+<strong>STICK Constants:</strong>
+<code>STICK_KEYBOARD</code>(0), <code>STICK_JOY1</code>(1), <code>STICK_JOY2</code>(2)
+</div>
+<div class="constants">
+<strong>STRIG Constants:</strong>
+<code>STRIG_SPACE</code>(0), <code>STRIG_JOY1_A</code>(1), <code>STRIG_JOY2_A</code>(2), <code>STRIG_JOY1_B</code>(3), <code>STRIG_JOY2_B</code>(4)
+</div>
+
+<!-- String Functions -->
+<h2 id="string">String Functions <code>bstring.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>LEN(s$)</code></td><td><code>basic_len(s)</code></td><td>String length</td></tr>
+<tr><td><code>LEFT$(s$,n)</code></td><td><code>basic_left(dest, src, n)</code></td><td>Left substring</td></tr>
+<tr><td><code>RIGHT$(s$,n)</code></td><td><code>basic_right(dest, src, n)</code></td><td>Right substring</td></tr>
+<tr><td><code>MID$(s$,p,n)</code></td><td><code>basic_mid(dest, src, pos, n)</code></td><td>Middle substring</td></tr>
+<tr><td><code>MID$(s$,p,n)=r$</code></td><td><code>basic_mid_replace(dest, pos, n, src)</code></td><td>Replace substring</td></tr>
+<tr><td><code>ASC(s$)</code></td><td><code>basic_asc(s)</code></td><td>Character code</td></tr>
+<tr><td><code>CHR$(n)</code></td><td><code>basic_chr(dest, code)</code></td><td>Code to character</td></tr>
+<tr><td><code>STR$(n)</code></td><td><code>basic_str(dest, n)</code></td><td>Integer to string</td></tr>
+<tr><td><code>STR$(n)</code></td><td><code>basic_str_long(dest, n)</code></td><td>Long to string</td></tr>
+<tr><td><code>STR$(n)</code></td><td><code>basic_str_float(dest, n)</code></td><td>Float to string</td></tr>
+<tr><td><code>VAL(s$)</code></td><td><code>basic_val(s)</code></td><td>String to integer</td></tr>
+<tr><td><code>VAL(s$)</code></td><td><code>basic_val_long(s)</code></td><td>String to long</td></tr>
+<tr><td><code>VAL(s$)</code></td><td><code>basic_val_float(s)</code></td><td>String to float (with E notation)</td></tr>
+<tr><td><code>HEX$(n)</code></td><td><code>basic_hex(dest, n)</code></td><td>Hex string</td></tr>
+<tr><td><code>BIN$(n)</code></td><td><code>basic_bin(dest, n)</code></td><td>Binary string</td></tr>
+<tr><td><code>OCT$(n)</code></td><td><code>basic_oct(dest, n)</code></td><td>Octal string</td></tr>
+<tr><td><code>INSTR(s$,t$)</code></td><td><code>basic_instr(s, search, start)</code></td><td>Find substring</td></tr>
+<tr><td><code>STRING$(n,c)</code></td><td><code>basic_string(dest, n, code)</code></td><td>Repeat character</td></tr>
+<tr><td><code>SPACE$(n)</code></td><td><code>basic_space(dest, n)</code></td><td>Create spaces</td></tr>
+<tr><td>-</td><td><code>basic_ucase(s)</code></td><td>Uppercase (in-place)</td></tr>
+<tr><td>-</td><td><code>basic_lcase(s)</code></td><td>Lowercase (in-place)</td></tr>
+<tr><td>-</td><td><code>basic_strcmp(s1, s2)</code></td><td>Compare strings</td></tr>
+<tr><td>-</td><td><code>basic_concat(dest, s1, s2)</code></td><td>Concatenate strings</td></tr>
+<tr><td>-</td><td><code>basic_jis_to_sjis(dest, src)</code></td><td>JIS to Shift-JIS</td></tr>
+<tr><td>-</td><td><code>basic_sjis_to_jis(dest, src)</code></td><td>Shift-JIS to JIS</td></tr>
+</table>
+
+<!-- Math Functions -->
+<h2 id="math">Math Functions <code>bmath.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>ABS(n)</code></td><td><code>basic_abs(n)</code> / <code>basic_abs_float(n)</code></td><td>Absolute value</td></tr>
+<tr><td><code>SGN(n)</code></td><td><code>basic_sgn(n)</code> / <code>basic_sgn_float(n)</code></td><td>Sign (-1, 0, 1)</td></tr>
+<tr><td><code>INT(n)</code></td><td><code>basic_int(n)</code></td><td>Floor</td></tr>
+<tr><td><code>FIX(n)</code></td><td><code>basic_fix(n)</code></td><td>Truncate toward zero</td></tr>
+<tr><td><code>CINT(n)</code></td><td><code>basic_cint(n)</code></td><td>Round to integer</td></tr>
+<tr><td><code>CSNG(n)</code></td><td><code>basic_csng(n)</code></td><td>Convert to single</td></tr>
+<tr><td><code>CDBL(n)</code></td><td><code>basic_cdbl(n)</code></td><td>Convert to double</td></tr>
+<tr><td><code>SQR(n)</code></td><td><code>basic_sqr(n)</code></td><td>Square root</td></tr>
+<tr><td><code>SIN(n)</code></td><td><code>basic_sin(n)</code></td><td>Sine (radians)</td></tr>
+<tr><td><code>COS(n)</code></td><td><code>basic_cos(n)</code></td><td>Cosine (radians)</td></tr>
+<tr><td><code>TAN(n)</code></td><td><code>basic_tan(n)</code></td><td>Tangent (radians)</td></tr>
+<tr><td><code>ATN(n)</code></td><td><code>basic_atn(n)</code></td><td>Arctangent</td></tr>
+<tr><td><code>LOG(n)</code></td><td><code>basic_log(n)</code></td><td>Natural logarithm</td></tr>
+<tr><td>-</td><td><code>basic_log10(n)</code></td><td>Base-10 logarithm</td></tr>
+<tr><td><code>EXP(n)</code></td><td><code>basic_exp(n)</code></td><td>Exponential (e^n)</td></tr>
+<tr><td>-</td><td><code>basic_pow(base, exp)</code></td><td>Power</td></tr>
+<tr><td><code>RND(n)</code></td><td><code>basic_rnd(n)</code></td><td>Random (0.0 - 1.0)</td></tr>
+<tr><td><code>RANDOMIZE</code></td><td><code>basic_randomize(seed)</code></td><td>Set random seed</td></tr>
+<tr><td><code>RANDOMIZE TIME</code></td><td><code>basic_randomize_time()</code></td><td>Seed from timer</td></tr>
+<tr><td>-</td><td><code>basic_rnd_range(min, max)</code></td><td>Random integer in range</td></tr>
+<tr><td>-</td><td><code>basic_min(a, b)</code></td><td>Minimum</td></tr>
+<tr><td>-</td><td><code>basic_max(a, b)</code></td><td>Maximum</td></tr>
+<tr><td>-</td><td><code>basic_clamp(val, min, max)</code></td><td>Clamp to range</td></tr>
+<tr><td>-</td><td><code>basic_deg_to_rad(deg)</code></td><td>Degrees to radians</td></tr>
+<tr><td>-</td><td><code>basic_rad_to_deg(rad)</code></td><td>Radians to degrees</td></tr>
+</table>
+
+<!-- System -->
+<h2 id="system">System <code>system.h</code></h2>
+
+<table>
+<tr><th>MSX BASIC</th><th>C Function</th><th>Description</th></tr>
+<tr><td><code>TIME</code></td><td><code>basic_time()</code></td><td>Get timer value</td></tr>
+<tr><td><code>TIME=n</code></td><td><code>basic_time_set(n)</code></td><td>Set timer value</td></tr>
+<tr><td><code>VDP(n)</code></td><td><code>basic_vdp(reg)</code></td><td>Read VDP register shadow</td></tr>
+<tr><td>-</td><td><code>basic_vdp_set(reg, val)</code></td><td>Write VDP register</td></tr>
+<tr><td><code>VDP(-1)</code></td><td><code>basic_vdp_status()</code></td><td>Read VDP status S#0</td></tr>
+<tr><td>-</td><td><code>basic_vdp_status_n(reg)</code></td><td>Read VDP status S#n (MSX2)</td></tr>
+<tr><td><code>VPEEK(a)</code></td><td><code>basic_vpeek(addr)</code></td><td>Read VRAM (16KB)</td></tr>
+<tr><td><code>VPOKE a,v</code></td><td><code>basic_vpoke(addr, val)</code></td><td>Write VRAM (16KB)</td></tr>
+<tr><td>-</td><td><code>basic_vpeek_ex(addr)</code></td><td>Read VRAM (128KB, MSX2)</td></tr>
+<tr><td>-</td><td><code>basic_vpoke_ex(addr, val)</code></td><td>Write VRAM (128KB, MSX2)</td></tr>
+<tr><td><code>BASE(n)</code></td><td><code>basic_base(n)</code></td><td>Get VRAM base address</td></tr>
+<tr><td>-</td><td><code>basic_vram_fill(addr, val, count)</code></td><td>Fill VRAM block</td></tr>
+<tr><td>-</td><td><code>basic_vram_write(dest, src, count)</code></td><td>RAM to VRAM copy</td></tr>
+<tr><td>-</td><td><code>basic_vram_read(dest, src, count)</code></td><td>VRAM to RAM copy</td></tr>
+<tr><td>-</td><td><code>basic_wait_vblank()</code></td><td>Wait for VBlank</td></tr>
+<tr><td>-</td><td><code>basic_wait_frames(n)</code></td><td>Wait n frames</td></tr>
+<tr><td><code>FRE(0)</code></td><td><code>basic_fre()</code></td><td>Free memory</td></tr>
+<tr><td>-</td><td><code>basic_get_msx_type()</code></td><td>Get MSX type (0-3)</td></tr>
+<tr><td>-</td><td><code>basic_is_msx2()</code></td><td>Check MSX2 or later</td></tr>
+<tr><td>-</td><td><code>basic_is_msx2plus()</code></td><td>Check MSX2+ or later</td></tr>
+<tr><td>-</td><td><code>basic_is_turbo_r()</code></td><td>Check turbo R</td></tr>
+<tr><td>-</td><td><code>basic_break_check()</code></td><td>Check CTRL+STOP</td></tr>
+<tr><td>-</td><td><code>basic_break_enable(on)</code></td><td>Enable/disable CTRL+STOP</td></tr>
+<tr><td>-</td><td><code>basic_bios_call(addr)</code></td><td>Call BIOS routine</td></tr>
+<tr><td>-</td><td><code>basic_slot_read(addr, slot, sub)</code></td><td>Read from slot</td></tr>
+<tr><td>-</td><td><code>basic_slot_write(addr, slot, sub, val)</code></td><td>Write to slot</td></tr>
+</table>
+
+<!-- VDP Direct Access -->
+<h2 id="vdp">VDP Direct Access <code>vdp.h</code> <span class="badge">MSX2</span></h2>
+
+<p>Low-level V9938/V9958 access for MSX2/MSX2+:</p>
+
+<table>
+<tr><th>C Function</th><th>Description</th></tr>
+<tr><td><code>vdp_write_reg(reg, val)</code></td><td>Write VDP register</td></tr>
+<tr><td><code>vdp_read_status(reg)</code></td><td>Read status register</td></tr>
+<tr><td><code>vdp_wait_cmd()</code></td><td>Wait for command completion</td></tr>
+<tr><td><code>vdp_pset(x, y, color, op)</code></td><td>Set pixel (with logical op)</td></tr>
+<tr><td><code>vdp_line(x1, y1, x2, y2, color, op)</code></td><td>Draw line (with logical op)</td></tr>
+<tr><td><code>vdp_fill(x, y, w, h, color)</code></td><td>Fill rectangle (HMMV)</td></tr>
+<tr><td><code>vdp_copy(sx, sy, dx, dy, w, h)</code></td><td>Copy rectangle (HMMM)</td></tr>
+<tr><td><code>vdp_set_palette(idx, r, g, b)</code></td><td>Set palette color</td></tr>
+<tr><td><code>vdp_set_display_page(page)</code></td><td>Set display page</td></tr>
+<tr><td><code>vdp_set_active_page(page)</code></td><td>Set active page</td></tr>
+</table>
+
+<!-- Examples -->
+<h2 id="examples">Examples</h2>
+
+<table>
+<tr><th>File</th><th>Description</th><th>Requires</th></tr>
+<tr><td><code>01_hello.c</code></td><td>Text, LOCATE, TAB, SPC, PRINT USING</td><td>MSX1</td></tr>
+<tr><td><code>02_graphics.c</code></td><td>PSET, LINE, BOX, CIRCLE, ELLIPSE, filled shapes</td><td>MSX1</td></tr>
+<tr><td><code>03_graphics_msx2.c</code></td><td>SCREEN 5/7/8, palette, page flip, COPY</td><td>MSX2</td></tr>
+<tr><td><code>04_sprite.c</code></td><td>Sprite definition, display, animation, collision</td><td>MSX1</td></tr>
+<tr><td><code>05_sound.c</code></td><td>BEEP, PSG control, MML, 3-channel music, SFX</td><td>MSX1</td></tr>
+<tr><td><code>06_input.c</code></td><td>INKEY$, STICK, STRIG, PEEK/POKE, VDP status</td><td>MSX1</td></tr>
+<tr><td><code>07_draw.c</code></td><td>DRAW commands (U/D/L/R/M/A/S/B/N/C)</td><td>MSX1</td></tr>
+<tr><td><code>08_paint.c</code></td><td>PAINT flood fill, GET/PUT, circle arcs</td><td>MSX1</td></tr>
+<tr><td><code>09_string.c</code></td><td>String functions, conversions, manipulation</td><td>MSX1</td></tr>
+<tr><td><code>10_math.c</code></td><td>Math, trigonometry, random numbers</td><td>MSX1</td></tr>
+<tr><td><code>11_system.c</code></td><td>MSX detection, VDP, TIME, VRAM, SCREEN$</td><td>MSX1</td></tr>
+</table>
+
+<h3>Build an Example</h3>
+<pre><code>build_sample.bat 01_hello</code></pre>
+<p>Or manually:</p>
+<pre><code>zcc +msx -vn -O3 -compiler=sccz80 -lm ^
+    -Iinclude -Llib -lmsxbasic ^
+    -subtype=rom examples\01_hello.c -o examples\01_hello -create-app</code></pre>
+
+<!-- Technical Notes -->
+<h2 id="technical">Technical Notes</h2>
+
+<ul>
+  <li><strong>Compiler:</strong> Z88DK with <strong>sccz80</strong> backend (<code>-compiler=sccz80</code>)</li>
+  <li><strong>Calling convention:</strong> sccz80 (left-to-right push, <code>uint8_t</code> promoted to 16-bit on stack)</li>
+  <li><strong>Screen modes 5-12:</strong> Use VDP hardware commands for drawing</li>
+  <li><strong>Screen modes 2-4:</strong> Use software rendering via BIOS</li>
+  <li><strong>SCREEN 6:</strong> Tiled palette (colors 0,1 share palettes; colors 2,3 share palettes)</li>
+</ul>
+
+<h3>References</h3>
+<ul>
+  <li><a href="https://github.com/fu-sen/MSX-BASIC">MSX-BASIC Command Reference</a></li>
+  <li><a href="https://www.msx.org/wiki/">MSX.org Wiki - SCREEN modes</a></li>
+  <li><a href="https://github.com/z88dk/z88dk/wiki/Platform---MSX">Z88DK - MSX Platform</a></li>
+  <li><a href="https://www.msx.org/wiki/V9938">V9938 Technical Data</a></li>
+</ul>
+
+<!-- License -->
+<h2 id="license">License</h2>
+<p>MIT License - Copyright (c) UO Soft</p>
+<p>See <a href="../LICENSE">LICENSE</a> for details.</p>
+
+</main>
+</body>
+</html>

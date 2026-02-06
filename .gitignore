@@ -1,0 +1,42 @@
+# Build artifacts
+*.o
+*.lib
+*.rom
+*.bin
+*.map
+*.sym
+*.def
+*.err
+*.lis
+
+# Z88DK temporary files
+zcc_opt.def
+zcc_proj.lst
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
+
+# Z88DK linker output (extensionless)
+examples/01_hello
+examples/02_graphics
+examples/03_graphics_msx2
+examples/04_sprite
+examples/05_sound
+examples/06_input
+examples/07_draw
+examples/08_paint
+examples/09_string
+examples/10_math
+examples/11_system
+
+# OS files
+Thumbs.db
+.DS_Store
+nul
