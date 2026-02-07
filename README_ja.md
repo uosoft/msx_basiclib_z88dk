@@ -38,7 +38,8 @@ build_sample.bat 01_hello
 ```batch
 zcc +msx -vn -O3 -compiler=sccz80 -lm ^
     -Iinclude -Llib -lmsxbasic ^
-    -subtype=rom your_program.c -o your_program -create-app
+    -subtype=rom -pragma-define:CRT_ORG_BSS=0xC048 ^
+    your_program.c -o your_program -create-app
 ```
 
 **MSX-DOS COMファイル:**
@@ -349,7 +350,8 @@ MSX2/MSX2+向けのV9938/V9958低レベルアクセス:
 ```batch
 zcc +msx -vn -O3 -compiler=sccz80 -lm ^
     -Iinclude -Llib -lmsxbasic ^
-    -subtype=rom examples\01_hello.c -o examples\01_hello -create-app
+    -subtype=rom -pragma-define:CRT_ORG_BSS=0xC048 ^
+    examples\01_hello.c -o examples\01_hello -create-app
 ```
 
 **MSX-DOS COM:**

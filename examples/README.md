@@ -39,7 +39,8 @@ This will create `examples/01_hello.rom`.
 ```batch
 zcc +msx -vn -O3 -compiler=sccz80 -lm ^
     -Iinclude -Llib -lmsxbasic ^
-    -subtype=rom examples/01_hello.c -o examples/01_hello -create-app
+    -subtype=rom -pragma-define:CRT_ORG_BSS=0xC048 ^
+    examples/01_hello.c -o examples/01_hello -create-app
 ```
 
 **MSX-DOS COM file:**

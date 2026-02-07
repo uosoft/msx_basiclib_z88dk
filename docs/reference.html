@@ -247,7 +247,8 @@ a:hover { text-decoration: underline; }
 <h4>ROM cartridge</h4>
 <pre><code>zcc +msx -vn -O3 -compiler=sccz80 -lm ^
     -Iinclude -Llib -lmsxbasic ^
-    -subtype=rom your_program.c -o your_program -create-app</code></pre>
+    -subtype=rom -pragma-define:CRT_ORG_BSS=0xC048 ^
+    your_program.c -o your_program -create-app</code></pre>
 <h4>MSX-DOS COM file</h4>
 <pre><code>zcc +msx -vn -O3 -compiler=sccz80 -lm ^
     -Iinclude -Llib -lmsxbasic ^

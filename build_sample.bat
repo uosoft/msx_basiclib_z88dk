@@ -37,7 +37,7 @@ if not exist "%EXDIR%\%SAMPLE%.c" (
 )
 
 echo Compiling %SAMPLE%.c to ROM...
-zcc +msx -vn -O3 -compiler=sccz80 -lm -I"%INCDIR%" -L"%OUTDIR%" -lmsxbasic -subtype=rom "%EXDIR%\%SAMPLE%.c" -o "%EXDIR%\%SAMPLE%" -create-app
+zcc +msx -vn -O3 -compiler=sccz80 -lm -I"%INCDIR%" -L"%OUTDIR%" -lmsxbasic -subtype=rom -pragma-define:CRT_ORG_BSS=0xC048 "%EXDIR%\%SAMPLE%.c" -o "%EXDIR%\%SAMPLE%" -create-app
 
 if errorlevel 1 (
     echo ERROR: Compilation failed

@@ -1,7 +1,5 @@
 # Build artifacts
 *.o
-*.lib
-*.rom
 *.bin
 *.map
 *.sym
