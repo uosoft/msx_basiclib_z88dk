@@ -33,7 +33,7 @@
 #define GRPACY      0xFCB9  /* Graphics Y position */
 #define JIESSION    0xF348  /* Kanji mode flag */
 #define INTCNT      0xFCA2  /* INTERVAL counter */
-#define MUSICF      0xFB3F  /* PLAY status flag */
+#define MUSICF      0xFB16  /* PLAY status flag */
 #define RG0SAV      0xF3DF  /* VDP register 0 save */
 #define RG1SAV      0xF3E0  /* VDP register 1 save */
 #define STATFL      0xF3E7  /* VDP status flag */

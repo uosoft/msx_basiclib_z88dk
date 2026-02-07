@@ -31,8 +31,11 @@
 #define sys_write16(addr, val) (*(volatile uint16_t*)(addr) = (val))
 #define sys_read16(addr)       (*(volatile uint16_t*)(addr))
 
+/* Use cached MSX version from system.c */
+extern uint8_t basic_is_msx2(void);
+
 static uint8_t is_msx2(void) {
-    return sys_read8(MSXVER) >= 1;
+    return basic_is_msx2();
 }
 
 /* Pack color for SCREEN 6 (4 colors, 2 bits per pixel)
@@ -57,7 +60,9 @@ PUBLIC _gfx_rdvrm
 PUBLIC _gfx_wrtvrm
 
 _gfx_clrspr:
-    call 0x0069     ; CLRSPR
+    ld hl, 0x0069
+    ld (0xC02C), hl
+    call 0xC000     ; CLRSPR via trampoline
     ret
 
 ; uint8_t gfx_rdvrm(uint16_t addr)
@@ -69,7 +74,11 @@ _gfx_rdvrm:
     inc hl
     ld d, (hl)      ; addr high
     ex de, hl       ; HL = addr
-    call 0x004A     ; RDVRM
+    push hl
+    ld hl, 0x004A
+    ld (0xC02C), hl
+    pop hl
+    call 0xC000     ; RDVRM via trampoline
     ld l, a         ; return value in L
     ret
 
@@ -85,7 +94,13 @@ _gfx_wrtvrm:
     inc hl
     ld d, (hl)      ; addr high at SP+5
     ex de, hl       ; HL = addr
-    call 0x004D     ; WRTVRM
+    push hl
+    push af
+    ld hl, 0x004D
+    ld (0xC02C), hl
+    pop af
+    pop hl
+    call 0xC000     ; WRTVRM via trampoline
     ret
 
 #endasm
@@ -1025,7 +1040,9 @@ void basic_sprite_size(uint8_t size) {
         ld a, (hl)
         ld b, a
         ld c, 1         ; Register 1
-        call 0x0047     ; WRTVDP
+        ld hl, 0x0047
+        ld (0xC02C), hl
+        call 0xC000     ; WRTVDP via trampoline
     #endasm
 }
 
@@ -1082,17 +1099,10 @@ void basic_sprites_off(void) {
 }
 
 uint8_t basic_sprite_collision(void) {
-    /* Read VDP status register for collision flag */
-    #asm
-        call 0x0138     ; RDVDP - read VDP status
-        and 0x20        ; Bit 5 = collision
-        jr z, _no_collision
-        ld l, 1
-        jr _collision_done
-    _no_collision:
-        ld l, 0
-    _collision_done:
-    #endasm
+    /* Read STATFL (0xF3E7) which is updated by the interrupt handler
+     * each VBLANK. Reading RDVDP directly races with the interrupt
+     * handler that already cleared S#0. */
+    return (*(volatile uint8_t*)0xF3E7 & 0x20) ? 1 : 0;
 }
 
 void basic_copy(int16_t sx, int16_t sy, uint16_t width, uint16_t height,

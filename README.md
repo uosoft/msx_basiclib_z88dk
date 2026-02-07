@@ -33,10 +33,20 @@ build_sample.bat 01_hello
 
 ### Compile Your Program
 
+**ROM cartridge:**
+
 ```batch
 zcc +msx -vn -O3 -compiler=sccz80 -lm ^
     -Iinclude -Llib -lmsxbasic ^
     -subtype=rom your_program.c -o your_program -create-app
+```
+
+**MSX-DOS COM file:**
+
+```batch
+zcc +msx -vn -O3 -compiler=sccz80 -lm ^
+    -Iinclude -Llib -lmsxbasic ^
+    -subtype=msxdos your_program.c -o your_program.com
 ```
 
 ### Hello World
@@ -204,7 +214,8 @@ PUT operations: `PUT_PSET`(0), `PUT_AND`(1), `PUT_OR`(2), `PUT_XOR`(3), `PUT_PRE
 | `KEY n,s$` | `basic_key_def(n, str)` | Define function key |
 | `KEY ON/OFF` | `basic_key_display(show)` | Show/hide function keys |
 
-STICK constants: `STICK_KEYBOARD`(0), `STICK_JOY1`(1), `STICK_JOY2`(2)
+STICK device constants: `STICK_KEYBOARD`(0), `STICK_JOY1`(1), `STICK_JOY2`(2)
+STICK direction constants: `STICK_UP`(1), `STICK_UP_RIGHT`(2), `STICK_RIGHT`(3), `STICK_DOWN_RIGHT`(4), `STICK_DOWN`(5), `STICK_DOWN_LEFT`(6), `STICK_LEFT`(7), `STICK_UP_LEFT`(8)
 STRIG constants: `STRIG_SPACE`(0), `STRIG_JOY1_A`(1), `STRIG_JOY2_A`(2), `STRIG_JOY1_B`(3), `STRIG_JOY2_B`(4)
 
 ### String Functions (bstring.h)
@@ -333,10 +344,20 @@ Low-level V9938/V9958 access for MSX2/MSX2+:
 
 ### Build an Example
 
+**ROM:**
+
 ```batch
 zcc +msx -vn -O3 -compiler=sccz80 -lm ^
     -Iinclude -Llib -lmsxbasic ^
     -subtype=rom examples\01_hello.c -o examples\01_hello -create-app
+```
+
+**MSX-DOS COM:**
+
+```batch
+zcc +msx -vn -O3 -compiler=sccz80 -lm ^
+    -Iinclude -Llib -lmsxbasic ^
+    -subtype=msxdos examples\01_hello.c -o examples\01_hello.com
 ```
 
 ## Directory Structure

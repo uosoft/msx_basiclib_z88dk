@@ -21,13 +21,10 @@ PUBLIC _snd_gtstck
 PUBLIC _snd_gttrig
 
 _snd_beep:
-    call 0x00C0     ; BEEP
-    ret
+    ret             ; Not used (basic_beep is PSG-based now)
 
 ; void snd_wrtpsg(uint8_t reg, uint8_t val)
-; sccz80 stack: [ret][val][reg]
-; SP+2 = val, SP+4 = reg
-; WRTPSG: A = register, E = value
+; Direct I/O port access (works in both ROM and MSX-DOS)
 _snd_wrtpsg:
     ld hl, 2
     add hl, sp
@@ -35,38 +32,41 @@ _snd_wrtpsg:
     inc hl
     inc hl
     ld a, (hl)      ; reg
-    call 0x0093     ; WRTPSG
+    out (0xA0), a   ; PSG register select
+    ld a, e
+    out (0xA1), a   ; PSG data write
     ret
 
 ; uint8_t snd_rdpsg(uint8_t reg)
-; sccz80 stack: [ret][reg]
-; SP+2 = reg
-; RDPSG: A = register, returns value in A
+; Direct I/O port access
 _snd_rdpsg:
     ld hl, 2
     add hl, sp
     ld a, (hl)      ; reg
-    call 0x0096     ; RDPSG
+    out (0xA0), a   ; PSG register select
+    in a, (0xA2)    ; PSG data read
     ld l, a
     ret
 
 ; uint8_t snd_gtstck(uint8_t stick)
-; SP+2 = stick
 _snd_gtstck:
     ld hl, 2
     add hl, sp
     ld a, (hl)
-    call 0x00D5     ; GTSTCK
+    ld hl, 0x00D5
+    ld (0xC02C), hl
+    call 0xC000     ; GTSTCK via trampoline
     ld l, a
     ret
 
 ; uint8_t snd_gttrig(uint8_t trigger)
-; SP+2 = trigger
 _snd_gttrig:
     ld hl, 2
     add hl, sp
     ld a, (hl)
-    call 0x00D8     ; GTTRIG
+    ld hl, 0x00D8
+    ld (0xC02C), hl
+    call 0xC000     ; GTTRIG via trampoline
     ld l, a
     ret
 
@@ -107,7 +107,20 @@ static uint16_t mml_envelope_period = 255;
 static uint8_t mml_gate[3] = {8, 8, 8};  /* Q command: gate time 1-8 (8 = full length) */
 
 void basic_beep(void) {
-    snd_beep();
+    uint8_t i;
+
+    /* Direct PSG beep (BIOS BEEP may not work in ROM cartridge) */
+    basic_sound(PSG_MIXER, 0xBE);  /* Tone A only */
+    basic_set_tone(0, 170);         /* ~1316 Hz (standard MSX BEEP) */
+    basic_set_volume(0, 13);
+
+    for (i = 0; i < 10; i++) {     /* ~1/6 sec at 60Hz */
+        #asm
+        halt
+        #endasm
+    }
+
+    basic_sound_off();
 }
 
 void basic_sound(uint8_t reg, uint8_t value) {
@@ -237,7 +250,7 @@ void basic_play(const char* mml) {
     mml_gate[0] = 8;
 
     /* Enable tone on channel A, disable noise */
-    basic_sound(PSG_MIXER, 0x38);
+    basic_sound(PSG_MIXER, 0xB8);
 
     while (*mml) {
         char c = *mml++;
@@ -579,7 +592,7 @@ void basic_play_3ch(const char* mml_a, const char* mml_b, const char* mml_c) {
     mml_tempo = 120;
 
     /* Enable all tone channels */
-    basic_sound(PSG_MIXER, 0x38);
+    basic_sound(PSG_MIXER, 0xB8);
 
     /* Parse first note for each active channel */
     for (i = 0; i < 3; i++) {
@@ -635,7 +648,7 @@ void basic_sound_off(void) {
     basic_sound(PSG_VOL_A, 0);
     basic_sound(PSG_VOL_B, 0);
     basic_sound(PSG_VOL_C, 0);
-    basic_sound(PSG_MIXER, 0x3F);
+    basic_sound(PSG_MIXER, 0xBF);
 }
 
 void basic_set_tone(uint8_t channel, uint16_t frequency) {
@@ -653,7 +666,7 @@ void basic_set_noise(uint8_t frequency) {
 }
 
 void basic_set_mixer(uint8_t tone_mask, uint8_t noise_mask) {
-    basic_sound(PSG_MIXER, (noise_mask << 3) | tone_mask);
+    basic_sound(PSG_MIXER, 0x80 | (noise_mask << 3) | tone_mask);
 }
 
 void basic_set_envelope(uint16_t period, uint8_t shape) {
@@ -668,7 +681,7 @@ void basic_sfx_explosion(void) {
 
     /* Use noise with envelope */
     basic_sound(PSG_NOISE, 15);
-    basic_sound(PSG_MIXER, 0x07);  /* Enable noise on all channels */
+    basic_sound(PSG_MIXER, 0x87);  /* Enable noise on all channels */
     basic_sound(PSG_VOL_A, 0x10);  /* Use envelope */
     basic_sound(PSG_ENV_LOW, 0x00);
     basic_sound(PSG_ENV_HIGH, 0x10);
@@ -686,7 +699,7 @@ void basic_sfx_laser(void) {
     uint16_t freq;
     uint8_t i;
 
-    basic_sound(PSG_MIXER, 0x3E);  /* Tone A only */
+    basic_sound(PSG_MIXER, 0xBE);  /* Tone A only */
     basic_sound(PSG_VOL_A, 15);
 
     /* Descending frequency sweep */
@@ -706,7 +719,7 @@ void basic_sfx_jump(void) {
     uint16_t freq;
     uint8_t i;
 
-    basic_sound(PSG_MIXER, 0x3E);  /* Tone A only */
+    basic_sound(PSG_MIXER, 0xBE);  /* Tone A only */
     basic_sound(PSG_VOL_A, 12);
 
     /* Ascending frequency sweep */
@@ -725,7 +738,7 @@ void basic_sfx_jump(void) {
 void basic_sfx_coin(void) {
     uint8_t i;
 
-    basic_sound(PSG_MIXER, 0x3E);  /* Tone A only */
+    basic_sound(PSG_MIXER, 0xBE);  /* Tone A only */
 
     /* High pitched double beep */
     basic_set_tone(0, 200);
@@ -749,7 +762,7 @@ void basic_sfx_hit(void) {
 
     /* Short noise burst */
     basic_sound(PSG_NOISE, 8);
-    basic_sound(PSG_MIXER, 0x07);  /* Noise on A */
+    basic_sound(PSG_MIXER, 0x87);  /* Noise on A */
     basic_sound(PSG_VOL_A, 15);
 
     for (i = 0; i < 6; i++) {

@@ -34,10 +34,20 @@ This will create `examples/01_hello.rom`.
 
 ### Using zcc directly
 
+**ROM cartridge:**
+
 ```batch
 zcc +msx -vn -O3 -compiler=sccz80 -lm ^
     -Iinclude -Llib -lmsxbasic ^
     -subtype=rom examples/01_hello.c -o examples/01_hello -create-app
+```
+
+**MSX-DOS COM file:**
+
+```batch
+zcc +msx -vn -O3 -compiler=sccz80 -lm ^
+    -Iinclude -Llib -lmsxbasic ^
+    -subtype=msxdos examples/01_hello.c -o examples/01_hello.com
 ```
 
 ## Requirements
@@ -48,5 +58,6 @@ zcc +msx -vn -O3 -compiler=sccz80 -lm ^
 ## Notes
 
 - Example 03 requires MSX2 or later
-- All examples are built as 32KB ROM cartridge
+- `build_sample.bat` builds 32KB ROM cartridge (.rom)
+- Examples can also be built as MSX-DOS COM files (.com)
 - Examples 01, 02, 04-11 are compatible with MSX1

@@ -12,8 +12,15 @@
 #include "../../include/msxbasic/system.h"
 
 #define MSXVER 0x002D
+#define CSRSW  0xFCA9
 #define sys_read8(addr)  (*(volatile uint8_t*)(addr))
 #define sys_write8(addr, val) (*(volatile uint8_t*)(addr) = (val))
+
+/* Forward declaration */
+void basic_init(void);
+
+/* Cached MSX version (read from BIOS ROM during init) */
+static uint8_t cached_msx_ver = 0;
 
 #asm
 
@@ -32,7 +39,11 @@ _sys_vpeek:
     pop hl
     push hl
     push de
-    call 0x004A     ; RDVRM
+    push hl
+    ld hl, 0x004A
+    ld (0xC02C), hl
+    pop hl
+    call 0xC000     ; RDVRM
     ld l, a
     ret
 
@@ -44,11 +55,17 @@ _sys_vpoke:
     push hl
     push de
     ld a, c
-    call 0x004D     ; WRTVRM
+    push hl
+    ld hl, 0x004D
+    ld (0xC02C), hl
+    pop hl
+    call 0xC000     ; WRTVRM
     ret
 
 _sys_rdvdp:
-    call 0x013E     ; RDVDP
+    ld hl, 0x013E
+    ld (0xC02C), hl
+    call 0xC000     ; RDVDP
     ld l, a
     ret
 
@@ -74,7 +91,11 @@ _sys_filvrm:
     inc hl
     ld d, (hl)      ; addr high
     ex de, hl       ; HL = addr
-    call 0x0056     ; FILVRM
+    push hl
+    ld hl, 0x0056
+    ld (0xC02C), hl
+    pop hl
+    call 0xC000     ; FILVRM
     ret
 
 ; void sys_ldirvm(uint16_t dest, const uint8_t* src, uint16_t count)
@@ -97,7 +118,11 @@ _sys_ldirvm:
     inc hl
     ld d, (hl)      ; dest high
     pop hl          ; HL = RAM src, DE = VRAM dest
-    call 0x005C     ; LDIRVM
+    push hl
+    ld hl, 0x005C
+    ld (0xC02C), hl
+    pop hl
+    call 0xC000     ; LDIRVM
     ret
 
 ; void sys_ldirmv(uint8_t* dest, uint16_t src, uint16_t count)
@@ -120,7 +145,11 @@ _sys_ldirmv:
     inc hl
     ld d, (hl)      ; dest high
     pop hl          ; HL = VRAM src, DE = RAM dest
-    call 0x0059     ; LDIRMV
+    push hl
+    ld hl, 0x0059
+    ld (0xC02C), hl
+    pop hl
+    call 0xC000     ; LDIRMV
     ret
 
 ; uint8_t sys_snsmat(uint8_t row)
@@ -131,7 +160,9 @@ _sys_snsmat:
     ld hl, 2
     add hl, sp
     ld a, (hl)      ; row
-    call 0x0141     ; SNSMAT
+    ld hl, 0x0141
+    ld (0xC02C), hl
+    call 0xC000     ; SNSMAT
     ld l, a
     ret
 
@@ -147,14 +178,18 @@ _sys_calbas:
     ld d, (hl)
     push de
     pop ix
-    call 0x0159     ; CALBAS
+    ld hl, 0x0159
+    ld (0xC02C), hl
+    call 0xC000     ; CALBAS
     ret
 
 ; uint8_t sys_breakx(void)
 ; Check CTRL+STOP via BREAKX BIOS
 PUBLIC _sys_breakx
 _sys_breakx:
-    call 0x00B7     ; BREAKX
+    ld hl, 0x00B7
+    ld (0xC02C), hl
+    call 0xC000     ; BREAKX
     ld l, 0
     ret nc          ; Not pressed
     inc l           ; Pressed (carry set)
@@ -198,7 +233,11 @@ _sys_rdslt:
     inc hl
     ld d, (hl)
     ex de, hl       ; HL = address
-    call 0x000C     ; RDSLT
+    push hl
+    ld hl, 0x000C
+    ld (0xC02C), hl
+    pop hl
+    call 0xC000     ; RDSLT
     ld l, a
     ret
 
@@ -222,7 +261,11 @@ _sys_wrslt:
     add hl, sp      ; adjust for pushed de
     ld e, (hl)      ; val
     pop hl          ; HL = address
-    call 0x0014     ; WRSLT
+    push hl
+    ld hl, 0x0014
+    ld (0xC02C), hl
+    pop hl
+    call 0xC000     ; WRSLT
     ret
 
 ; void sys_calslt(uint8_t slot, uint16_t addr)
@@ -242,7 +285,9 @@ _sys_calslt:
     ld d, (hl)
     push de
     pop ix          ; IX = address
-    call 0x001C     ; CALSLT
+    ld hl, 0x001C
+    ld (0xC02C), hl
+    call 0xC000     ; CALSLT
     ret
 
 ; uint8_t sys_vpeek_ex(uint16_t addr_low, uint16_t addr_high)
@@ -405,7 +450,8 @@ void basic_vdp_set(uint8_t reg, uint8_t value) {
 
 uint8_t basic_vdp_status(void) { return sys_rdvdp(); }
 uint8_t basic_vdp_status_n(uint8_t reg) {
-    if (sys_read8(MSXVER) < 1) return sys_rdvdp();  /* MSX1 only has S#0 */
+    basic_init();
+    if (cached_msx_ver < 1) return sys_rdvdp();  /* MSX1 only has S#0 */
     if (reg > 9) return 0;
     return sys_rdvdp_n(reg);
 }
@@ -416,8 +462,9 @@ extern uint8_t sys_vpeek_ex(uint16_t addr_low, uint16_t addr_high);
 extern void sys_vpoke_ex(uint8_t val, uint16_t addr_low, uint16_t addr_high);
 
 uint8_t basic_vpeek_ex(uint32_t address) {
+    basic_init();
     /* MSX1: only 16KB VRAM */
-    if (sys_read8(MSXVER) < 1) {
+    if (cached_msx_ver < 1) {
         return sys_vpeek(address & 0x3FFF);
     }
     /* MSX2: use assembly function for 128KB VRAM */
@@ -425,8 +472,9 @@ uint8_t basic_vpeek_ex(uint32_t address) {
 }
 
 void basic_vpoke_ex(uint32_t address, uint8_t value) {
+    basic_init();
     /* MSX1: only 16KB VRAM */
-    if (sys_read8(MSXVER) < 1) {
+    if (cached_msx_ver < 1) {
         sys_vpoke(address & 0x3FFF, value);
         return;
     }
@@ -514,8 +562,100 @@ uint8_t basic_mkdir(const char* path) { (void)path; return 0xFF; }
 uint8_t basic_rmdir(const char* path) { (void)path; return 0xFF; }
 void basic_system(const char* command) { (void)command; }
 
-uint8_t basic_get_msx_type(void) { return sys_read8(MSXVER); }
-uint8_t basic_is_msx2(void) { return sys_read8(MSXVER) >= 1; }
-uint8_t basic_is_msx2plus(void) { return sys_read8(MSXVER) >= 2; }
-uint8_t basic_is_turbo_r(void) { return sys_read8(MSXVER) >= 3; }
-void basic_init(void) {}
+uint8_t basic_get_msx_type(void) { basic_init(); return cached_msx_ver; }
+uint8_t basic_is_msx2(void) { basic_init(); return cached_msx_ver >= 1; }
+uint8_t basic_is_msx2plus(void) { basic_init(); return cached_msx_ver >= 2; }
+uint8_t basic_is_turbo_r(void) { basic_init(); return cached_msx_ver >= 3; }
+void basic_init(void) {
+    /*
+     * BIOS call trampoline for MSX-DOS compatibility.
+     * Copies 72 bytes of Z80 code to 0xC000 (page 3 RAM).
+     * The trampoline neutralizes H.KEYI and H.TIMI hooks,
+     * switches page 0 to BIOS slot with interrupts disabled,
+     * calls BIOS, then restores everything.
+     * Callers patch the call address at 0xC02C before calling 0xC000.
+     *
+     * Memory layout:
+     *   0xC000-0xC043: trampoline code (68 bytes)
+     *   0xC044:        save_slot (1 byte)
+     *   0xC045:        save_keyi (1 byte)
+     *   0xC046:        save_timi (1 byte)
+     *   0xC047:        reserved  (1 byte)
+     */
+    static const uint8_t tramp[] = {
+        /* Save registers and disable interrupts */
+        0xF5,                   /* push af              */  /* 0  */
+        0xC5,                   /* push bc              */  /* 1  */
+        0xF3,                   /* di                   */  /* 2  */
+        /* Save H.KEYI first byte (0xFD9A) */
+        0x3A, 0x9A, 0xFD,       /* ld a, (0xFD9A)       */  /* 3  */
+        0x32, 0x45, 0xC0,       /* ld (0xC045), a       */  /* 6  */
+        /* Save H.TIMI first byte (0xFD9F) */
+        0x3A, 0x9F, 0xFD,       /* ld a, (0xFD9F)       */  /* 9  */
+        0x32, 0x46, 0xC0,       /* ld (0xC046), a       */  /* 12 */
+        /* Neutralize both hooks (write RET instruction) */
+        0x3E, 0xC9,             /* ld a, 0xC9 (RET)     */  /* 15 */
+        0x32, 0x9A, 0xFD,       /* ld (0xFD9A), a       */  /* 17 */
+        0x32, 0x9F, 0xFD,       /* ld (0xFD9F), a       */  /* 20 */
+        /* Save current primary slot register */
+        0xDB, 0xA8,             /* in a, (0xA8)         */  /* 23 */
+        0x32, 0x44, 0xC0,       /* ld (0xC044), a       */  /* 25 */
+        /* Switch page 0 to BIOS slot */
+        0x3A, 0xC1, 0xFC,       /* ld a, (0xFCC1)       */  /* 28 */
+        0xE6, 0x03,             /* and 0x03             */  /* 31 */
+        0x4F,                   /* ld c, a              */  /* 33 */
+        0xDB, 0xA8,             /* in a, (0xA8)         */  /* 34 */
+        0xE6, 0xFC,             /* and 0xFC             */  /* 36 */
+        0xB1,                   /* or c                 */  /* 38 */
+        0xD3, 0xA8,             /* out (0xA8), a        */  /* 39 */
+        /* Restore caller's registers and call BIOS (DI) */
+        0xC1,                   /* pop bc               */  /* 41 */
+        0xF1,                   /* pop af               */  /* 42 */
+        0xCD, 0x00, 0x00,       /* call 0x0000 (patch@44) */ /* 43 */
+        /* Post-call: save result and disable interrupts */
+        0xF5,                   /* push af              */  /* 46 */
+        0xF3,                   /* di                   */  /* 47 */
+        /* Restore primary slot register */
+        0x3A, 0x44, 0xC0,       /* ld a, (0xC044)       */  /* 48 */
+        0xD3, 0xA8,             /* out (0xA8), a        */  /* 51 */
+        /* Restore H.KEYI */
+        0x3A, 0x45, 0xC0,       /* ld a, (0xC045)       */  /* 53 */
+        0x32, 0x9A, 0xFD,       /* ld (0xFD9A), a       */  /* 56 */
+        /* Restore H.TIMI */
+        0x3A, 0x46, 0xC0,       /* ld a, (0xC046)       */  /* 59 */
+        0x32, 0x9F, 0xFD,       /* ld (0xFD9F), a       */  /* 62 */
+        /* Enable interrupts and return */
+        0xFB,                   /* ei                   */  /* 65 */
+        0xF1,                   /* pop af               */  /* 66 */
+        0xC9,                   /* ret                  */  /* 67 */
+        /* Save areas */
+        0x00,                   /* save_slot  (0xC044)  */  /* 68 */
+        0x00,                   /* save_keyi  (0xC045)  */  /* 69 */
+        0x00,                   /* save_timi  (0xC046)  */  /* 70 */
+        0x00                    /* (reserved) (0xC047)  */  /* 71 */
+    };
+    static uint8_t done = 0;
+    volatile uint8_t* dest;
+    uint8_t i;
+    if (done) return;
+    dest = (volatile uint8_t*)0xC000;
+    for (i = 0; i < 72; i++) dest[i] = tramp[i];
+    done = 1;
+
+    /* Read MSX version from BIOS ROM via RDSLT through trampoline */
+    cached_msx_ver = sys_rdslt(sys_read8(0xFCC1), 0x002D);
+
+    /* Hide cursor (prevents white block after CHPUT) */
+    sys_write8(CSRSW, 0x00);
+    /* Suppress key click sound during BIOS interrupt handling */
+    sys_write8(0xF3DB, 0x00);  /* CLIKSW = 0 */
+    /* Initialize PSG and clear music queue via GICINI BIOS call.
+     * This silences all PSG channels, resets voice control blocks
+     * (VCBA/VCBB/VCBC), and clears MUSICF, preventing beep sounds
+     * from garbage data in the music queue. */
+    #asm
+    ld hl, 0x0090
+    ld (0xC02C), hl
+    call 0xC000
+    #endasm
+}

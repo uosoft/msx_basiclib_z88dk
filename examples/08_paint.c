@@ -4,109 +4,92 @@
  */
 
 /**
- * 08_paint.c - PAINT (Flood Fill) Demo
+ * 08_paint.c - Filled Shapes, PAINT, and GET/PUT Demo
  *
  * Demonstrates:
+ * - Filled shapes (circle_fill, boxfill, ellipse_fill)
  * - PAINT command (flood fill)
- * - Fill with border color
- * - Complex shape filling
  * - GET/PUT block operations
+ * - Circle arcs and ellipses
+ *
+ * Note: In SCREEN 2, each 8x1 pixel strip can only have 2 colors
+ *       (foreground/background). PAINT with a different fill color
+ *       than the border color may not work correctly. Use circle_fill,
+ *       boxfill, etc. for reliable filled shapes on MSX1.
  *
  * Compatible: MSX1/MSX2/MSX2+/turboR
  */
 
 #include <msxbasic/msxbasic.h>
 
-/* Buffer for GET/PUT (max 32x32 pixels = ~1KB) */
+/* Buffer for GET/PUT (max 32x32 pixels) */
 static uint8_t image_buffer[1100];
 
-void demo_basic_paint(void) {
+void demo_filled_shapes(void) {
     basic_cls();
     basic_init_grp();
 
     basic_locate(0, 0);
-    basic_print("1. Basic PAINT (Flood Fill)");
+    basic_print("1. Filled Shapes");
 
-    /* Draw closed shapes */
-    basic_circle(50, 80, 30, 15);
-    basic_box(100, 50, 160, 110, 7);
-    basic_circle(200, 80, 25, 9);
+    /* Filled circle */
+    basic_circle_fill(55, 80, 30, 6);
+    basic_circle(55, 80, 30, 6);
 
-    /* Fill them with different colors */
-    basic_paint(50, 80, 6, 15);    /* Circle: dark red, border white */
-    basic_paint(130, 80, 4, 7);    /* Box: dark blue, border cyan */
-    basic_paint(200, 80, 3, 9);    /* Circle: light green, border light red */
+    /* Filled rectangle */
+    basic_boxfill(105, 55, 165, 105, 4);
+
+    /* Filled ellipse */
+    basic_ellipse_fill(215, 80, 25, 35, 3);
+
+    /* Labels */
+    basic_locate(3, 15);
+    basic_print("Circle");
+    basic_locate(13, 15);
+    basic_print("Box");
+    basic_locate(24, 15);
+    basic_print("Ellipse");
+
+    /* Small filled shapes */
+    basic_circle_fill(40, 150, 15, 9);
+    basic_circle_fill(80, 150, 15, 10);
+    basic_circle_fill(120, 150, 15, 11);
+    basic_boxfill(145, 138, 175, 162, 7);
+    basic_boxfill(185, 138, 215, 162, 8);
+    basic_ellipse_fill(245, 150, 10, 20, 5);
 
     basic_wait_key();
 }
 
-void demo_complex_shapes(void) {
+void demo_paint_fill(void) {
     basic_cls();
     basic_init_grp();
 
     basic_locate(0, 0);
-    basic_print("2. Complex Shape Filling");
+    basic_print("2. PAINT Flood Fill");
 
-    /* Draw a star outline */
-    basic_grp_move(128, 50);
-    basic_draw("C15 F20 L35 E20 D35 H20 R35 G20 U35 E20");
+    /* PAINT works reliably when fill color matches border color.
+     * Draw border and fill with same color, then the flood fill
+     * correctly detects the boundary. */
 
-    /* Draw nested rectangles */
-    basic_box(30, 100, 90, 160, 15);
-    basic_box(40, 110, 80, 150, 15);
+    /* Three filled boxes using PAINT */
+    basic_box(20, 40, 75, 95, 6);
+    basic_paint_c(48, 68, 6);
 
-    /* Fill areas */
-    basic_paint(128, 90, 11, 15);   /* Star: yellow */
-    basic_paint(35, 105, 5, 15);    /* Outer rect: light blue */
-    basic_paint(50, 130, 8, 15);    /* Inner rect: red */
+    basic_box(95, 40, 160, 95, 4);
+    basic_paint_c(128, 68, 4);
 
-    /* Draw a donut shape */
-    basic_circle(200, 130, 35, 7);
-    basic_circle(200, 130, 15, 7);
+    basic_box(180, 40, 245, 95, 3);
+    basic_paint_c(213, 68, 3);
 
-    /* Fill the ring area */
-    basic_paint(200, 100, 13, 7);   /* Ring: magenta */
+    /* Nested boxes: outer ring filled, inner empty */
+    basic_box(40, 115, 215, 180, 7);
+    basic_paint_c(45, 148, 7);
+    /* Clear inner area to show ring effect */
+    basic_boxfill(65, 130, 190, 165, 0);
 
-    basic_wait_key();
-}
-
-void demo_pattern_fill(void) {
-    int16_t i;
-
-    basic_cls();
-    basic_init_grp();
-
-    basic_locate(0, 0);
-    basic_print("3. Multiple Regions");
-
-    /* Draw a grid of cells */
-    for (i = 0; i < 4; i++) {
-        basic_line(50 + i * 40, 50, 50 + i * 40, 170, 15);
-        basic_line(50, 50 + i * 30, 210, 50 + i * 30, 15);
-    }
-    basic_line(210, 50, 210, 170, 15);
-    basic_line(50, 170, 210, 170, 15);
-
-    /* Fill cells with different colors */
-    basic_paint(70, 65, 2, 15);
-    basic_paint(110, 65, 4, 15);
-    basic_paint(150, 65, 6, 15);
-    basic_paint(190, 65, 8, 15);
-
-    basic_paint(70, 95, 9, 15);
-    basic_paint(110, 95, 10, 15);
-    basic_paint(150, 95, 11, 15);
-    basic_paint(190, 95, 12, 15);
-
-    basic_paint(70, 125, 3, 15);
-    basic_paint(110, 125, 5, 15);
-    basic_paint(150, 125, 7, 15);
-    basic_paint(190, 125, 13, 15);
-
-    basic_paint(70, 155, 14, 15);
-    basic_paint(110, 155, 1, 15);
-    basic_paint(150, 155, 6, 15);
-    basic_paint(190, 155, 9, 15);
+    basic_locate(0, 23);
+    basic_print("PAINT fills enclosed regions");
 
     basic_wait_key();
 }
@@ -119,15 +102,14 @@ void demo_get_put(void) {
     basic_init_grp();
 
     basic_locate(0, 0);
-    basic_print("4. GET/PUT Block Operations");
+    basic_print("3. GET/PUT Block Operations");
 
     /* Draw a small sprite-like image */
-    basic_boxfill(20, 50, 50, 80, 0);  /* Clear area */
-    basic_circle(35, 65, 12, 15);      /* Head */
-    basic_circle_fill(35, 65, 10, 6);  /* Face fill */
-    basic_pset(30, 62, 15);            /* Left eye */
-    basic_pset(40, 62, 15);            /* Right eye */
-    basic_line(32, 70, 38, 70, 15);    /* Mouth */
+    basic_circle_fill(35, 65, 10, 6);   /* Face */
+    basic_circle(35, 65, 12, 15);       /* Head outline */
+    basic_pset(30, 62, 15);             /* Left eye */
+    basic_pset(40, 62, 15);             /* Right eye */
+    basic_line(32, 70, 38, 70, 15);     /* Mouth */
 
     basic_locate(0, 12);
     basic_print("Original image at (20,50)");
@@ -174,7 +156,7 @@ void demo_circle_arc(void) {
     basic_init_grp();
 
     basic_locate(0, 0);
-    basic_print("5. Circle Arcs and Ellipses");
+    basic_print("4. Circle Arcs and Ellipses");
 
     /* Draw arcs (partial circles) */
     basic_circle_ex(60, 80, 30, 15, 0, 90, 100);    /* 0-90 degrees */
@@ -190,16 +172,16 @@ void demo_circle_arc(void) {
     basic_circle_ex(220, 80, 25, 11, 30, 330, 100);
     basic_pset(230, 75, 1);  /* Eye */
 
-    /* Pie chart style */
-    basic_grp_move(100, 150);
-    basic_circle_ex(100, 150, 35, 15, 0, 360, 100);
-    basic_line(100, 150, 135, 150, 15);
-    basic_line(100, 150, 100, 115, 15);
-    basic_line(100, 150, 75, 180, 15);
+    /* Filled shapes for pie chart effect */
+    basic_circle_fill(100, 150, 35, 6);
+    basic_circle_fill(100, 150, 20, 4);
+    basic_circle_fill(100, 150, 10, 2);
+    basic_circle(100, 150, 35, 15);
 
-    basic_paint(115, 135, 6, 15);
-    basic_paint(85, 135, 4, 15);
-    basic_paint(100, 165, 2, 15);
+    /* Concentric filled ellipses */
+    basic_ellipse_fill(200, 150, 40, 25, 5);
+    basic_ellipse_fill(200, 150, 28, 17, 8);
+    basic_ellipse_fill(200, 150, 16, 10, 11);
 
     basic_wait_key();
 }
@@ -208,15 +190,14 @@ void main(void) {
     basic_screen(2);
     basic_color(15, 1, 1);
 
-    demo_basic_paint();
-    demo_complex_shapes();
-    demo_pattern_fill();
+    demo_filled_shapes();
+    demo_paint_fill();
     demo_get_put();
     demo_circle_arc();
 
     basic_screen(1);
     basic_cls();
-    basic_print("PAINT/GET/PUT Demo Complete!");
+    basic_print("Graphics Demo Complete!");
 
     while (1);
 }

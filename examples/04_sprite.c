@@ -47,6 +47,7 @@ void main(void) {
     uint8_t i;
     uint8_t stick_dir;
     uint8_t collision;
+    uint8_t beep_cooldown = 0;
 
     /* Initialize SCREEN 2 for MSX1 compatibility */
     basic_screen(2);
@@ -121,11 +122,13 @@ void main(void) {
                            9 + (i % 4), 1);  /* Balls - various colors */
         }
 
-        /* Check collision */
+        /* Check collision (with cooldown to avoid blocking beep loop) */
         collision = basic_sprite_collision();
-        if (collision) {
+        if (collision && beep_cooldown == 0) {
             basic_beep();
+            beep_cooldown = 120;  /* ~2 sec cooldown at 60Hz */
         }
+        if (beep_cooldown > 0) beep_cooldown--;
 
         /* Check for exit */
         if (basic_strig(STRIG_SPACE)) {

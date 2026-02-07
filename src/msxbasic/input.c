@@ -27,18 +27,36 @@ PUBLIC _inp_kilbuf
 PUBLIC _inp_dspfnk
 PUBLIC _inp_erafnk
 
+; CHSNS/CHGET implementation using trampoline
+; The trampoline handles slot switching and hook neutralization.
+; For waitkey, we EI+HALT between trampoline calls so the DOS
+; interrupt handler can scan the keyboard and fill the buffer.
+
 _inp_inkey:
-    call 0x009C     ; CHSNS
-    jr z, inkey_none
-    call 0x009F     ; CHGET
+    ld hl, 0x009C       ; CHSNS
+    ld (0xC02C), hl
+    call 0xC000         ; CHSNS via trampoline
+    jr z, _inkey_none
+    ld hl, 0x009F       ; CHGET
+    ld (0xC02C), hl
+    call 0xC000         ; CHGET via trampoline
     ld l, a
     ret
-inkey_none:
+_inkey_none:
     ld l, 0
     ret
 
 _inp_waitkey:
-    call 0x009F     ; CHGET
+_waitkey_loop:
+    ei
+    halt                ; wait for interrupt (DOS handler scans keyboard)
+    ld hl, 0x009C       ; CHSNS
+    ld (0xC02C), hl
+    call 0xC000         ; CHSNS via trampoline
+    jr z, _waitkey_loop ; no key, keep waiting
+    ld hl, 0x009F       ; CHGET
+    ld (0xC02C), hl
+    call 0xC000         ; CHGET via trampoline
     ld l, a
     ret
 
@@ -48,7 +66,9 @@ _inp_stick:
     push bc
     push hl
     ld a, c
-    call 0x00D5     ; GTSTCK
+    ld hl, 0x00D5
+    ld (0xC02C), hl
+    call 0xC000     ; GTSTCK via trampoline
     ld l, a
     ret
 
@@ -58,20 +78,28 @@ _inp_strig:
     push bc
     push hl
     ld a, c
-    call 0x00D8     ; GTTRIG
+    ld hl, 0x00D8
+    ld (0xC02C), hl
+    call 0xC000     ; GTTRIG via trampoline
     ld l, a
     ret
 
 _inp_kilbuf:
-    call 0x0156     ; KILBUF
+    ld hl, 0x0156
+    ld (0xC02C), hl
+    call 0xC000     ; KILBUF via trampoline
     ret
 
 _inp_dspfnk:
-    call 0x00CF     ; DSPFNK
+    ld hl, 0x00CF
+    ld (0xC02C), hl
+    call 0xC000     ; DSPFNK via trampoline
     ret
 
 _inp_erafnk:
-    call 0x00CC     ; ERAFNK
+    ld hl, 0x00CC
+    ld (0xC02C), hl
+    call 0xC000     ; ERAFNK via trampoline
     ret
 
 ; uint8_t inp_gtpad(uint8_t pad)
@@ -83,7 +111,9 @@ _inp_gtpad:
     ld hl, 2
     add hl, sp
     ld a, (hl)      ; pad number
-    call 0x00DB     ; GTPAD
+    ld hl, 0x00DB
+    ld (0xC02C), hl
+    call 0xC000     ; GTPAD via trampoline
     ld l, a
     ret
 
@@ -96,7 +126,9 @@ _inp_gtpdl:
     ld hl, 2
     add hl, sp
     ld a, (hl)      ; paddle number
-    call 0x00DE     ; GTPDL
+    ld hl, 0x00DE
+    ld (0xC02C), hl
+    call 0xC000     ; GTPDL via trampoline
     ld l, a
     ret
 

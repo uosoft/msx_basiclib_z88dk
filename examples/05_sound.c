@@ -43,7 +43,7 @@ void demo_psg_direct(void) {
     basic_print("   Frequency sweep...");
 
     /* Enable tone on channel A */
-    basic_sound(PSG_MIXER, 0x3E);
+    basic_sound(PSG_MIXER, 0xBE);
 
     /* Frequency sweep */
     for (freq = 100; freq < 500; freq += 10) {
@@ -66,40 +66,93 @@ void demo_psg_direct(void) {
     basic_wait_frames(30);
 }
 
-void demo_mml_single(void) {
+void demo_scale(void) {
+    /* PSG frequency dividers for C major scale (C4-C5) */
+    static const uint16_t scale[] = {851, 758, 675, 637, 568, 506, 451, 426};
+    uint8_t i;
+
     basic_locate(0, 9);
-    basic_print("3. MML Music (single channel)");
+    basic_print("3. Musical Scale");
     basic_locate(0, 10);
-    basic_print("   Playing scale...");
+    basic_print("   Playing C major scale...");
 
-    /* Play a simple scale */
-    basic_play("T120 L4 O4 CDEFGAB O5 C2");
+    /* Play scale using direct PSG control */
+    basic_sound(PSG_MIXER, 0xBE);  /* Tone A only */
+    for (i = 0; i < 8; i++) {
+        basic_set_tone(0, scale[i]);
+        basic_set_volume(0, 12);
+        basic_wait_frames(15);
+        basic_set_volume(0, 0);
+        basic_wait_frames(2);
+    }
 
-    basic_wait_frames(60);
+    basic_sound_off();
+    basic_wait_frames(30);
 
     basic_locate(0, 11);
     basic_print("   Playing melody...");
 
-    /* Simple melody with note lengths */
-    basic_play("T150 O4 L8 CCGGAAG4 FFEEDDC4");
+    /* Twinkle Twinkle melody using PSG */
+    basic_sound(PSG_MIXER, 0xBE);
+    basic_set_volume(0, 12);
 
-    basic_wait_frames(60);
+    basic_set_tone(0, 851); basic_wait_frames(10);  /* C */
+    basic_set_volume(0, 0); basic_wait_frames(2);
+    basic_set_volume(0, 12);
+    basic_set_tone(0, 851); basic_wait_frames(10);  /* C */
+    basic_set_volume(0, 0); basic_wait_frames(2);
+    basic_set_volume(0, 12);
+    basic_set_tone(0, 568); basic_wait_frames(10);  /* G */
+    basic_set_volume(0, 0); basic_wait_frames(2);
+    basic_set_volume(0, 12);
+    basic_set_tone(0, 568); basic_wait_frames(10);  /* G */
+    basic_set_volume(0, 0); basic_wait_frames(2);
+    basic_set_volume(0, 12);
+    basic_set_tone(0, 506); basic_wait_frames(10);  /* A */
+    basic_set_volume(0, 0); basic_wait_frames(2);
+    basic_set_volume(0, 12);
+    basic_set_tone(0, 506); basic_wait_frames(10);  /* A */
+    basic_set_volume(0, 0); basic_wait_frames(2);
+    basic_set_volume(0, 12);
+    basic_set_tone(0, 568); basic_wait_frames(20);  /* G (half) */
+    basic_set_volume(0, 0); basic_wait_frames(4);
+
+    basic_sound_off();
+    basic_wait_frames(30);
 }
 
-void demo_mml_3channel(void) {
+void demo_harmony(void) {
     basic_locate(0, 13);
-    basic_print("4. 3-Channel Music");
+    basic_print("4. 3-Channel Harmony");
     basic_locate(0, 14);
-    basic_print("   Playing harmony...");
+    basic_print("   Playing chords...");
 
-    /* 3-channel harmony */
-    basic_play_3ch(
-        "T100 O4 L4 CEGC2",     /* Channel A: melody */
-        "T100 O3 L4 EGCE2",     /* Channel B: harmony */
-        "T100 O2 L2 CG"         /* Channel C: bass */
-    );
+    /* Enable tone on all 3 channels */
+    basic_sound(PSG_MIXER, 0xB8);
 
+    /* C major chord: C4 + E4 + G4 */
+    basic_set_tone(0, 851);   /* C4 */
+    basic_set_tone(1, 675);   /* E4 */
+    basic_set_tone(2, 568);   /* G4 */
+    basic_set_volume(0, 10);
+    basic_set_volume(1, 10);
+    basic_set_volume(2, 10);
     basic_wait_frames(60);
+
+    /* G major chord: G3 + B3 + D4 */
+    basic_set_tone(0, 1136);  /* G3 */
+    basic_set_tone(1, 902);   /* B3 */
+    basic_set_tone(2, 758);   /* D4 */
+    basic_wait_frames(60);
+
+    /* C major chord again */
+    basic_set_tone(0, 851);
+    basic_set_tone(1, 675);
+    basic_set_tone(2, 568);
+    basic_wait_frames(60);
+
+    basic_sound_off();
+    basic_wait_frames(30);
 }
 
 void demo_sfx(void) {
@@ -142,8 +195,8 @@ void main(void) {
 
     demo_beep();
     demo_psg_direct();
-    demo_mml_single();
-    demo_mml_3channel();
+    demo_scale();
+    demo_harmony();
     demo_sfx();
 
     basic_locate(0, 23);

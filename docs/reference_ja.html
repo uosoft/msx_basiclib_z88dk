@@ -244,9 +244,14 @@ a:hover { text-decoration: underline; }
 <pre><code>build_sample.bat 01_hello</code></pre>
 
 <h3>プログラムのコンパイル</h3>
+<h4>ROMカートリッジ</h4>
 <pre><code>zcc +msx -vn -O3 -compiler=sccz80 -lm ^
     -Iinclude -Llib -lmsxbasic ^
     -subtype=rom your_program.c -o your_program -create-app</code></pre>
+<h4>MSX-DOS COMファイル</h4>
+<pre><code>zcc +msx -vn -O3 -compiler=sccz80 -lm ^
+    -Iinclude -Llib -lmsxbasic ^
+    -subtype=msxdos your_program.c -o your_program.com</code></pre>
 
 <h3>Hello World</h3>
 <pre><code>#include &lt;msxbasic/msxbasic.h&gt;
@@ -433,8 +438,13 @@ void main(void) {
 </table>
 
 <div class="constants">
-<strong>STICK定数:</strong>
+<strong>STICKデバイス定数:</strong>
 <code>STICK_KEYBOARD</code>(0), <code>STICK_JOY1</code>(1), <code>STICK_JOY2</code>(2)
+</div>
+<div class="constants">
+<strong>STICK方向定数:</strong>
+<code>STICK_UP</code>(1), <code>STICK_UP_RIGHT</code>(2), <code>STICK_RIGHT</code>(3), <code>STICK_DOWN_RIGHT</code>(4),
+<code>STICK_DOWN</code>(5), <code>STICK_DOWN_LEFT</code>(6), <code>STICK_LEFT</code>(7), <code>STICK_UP_LEFT</code>(8)
 </div>
 <div class="constants">
 <strong>STRIG定数:</strong>

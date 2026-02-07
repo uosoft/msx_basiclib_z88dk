@@ -24,11 +24,12 @@ void main(void) {
 
     /* Initialize SCREEN 0 (text 40x24) */
     basic_screen(0);
+    basic_width(40);
     basic_color(15, 4, 4);  /* White on dark blue */
     basic_cls();
 
     /* Title */
-    basic_locate(10, 0);
+    basic_locate(5, 0);
     basic_print("=== MSX BASIC Library Demo ===");
 
     /* Basic text output */

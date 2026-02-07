@@ -27,9 +27,25 @@
 #define SCRMOD      0xFCAF
 #define CSRSW       0xFCA9
 
+/* VRAM table address system variables */
+#define TXTNAM      0xF3B3  /* SCREEN 0 name table (2 bytes) */
+#define T32NAM      0xF3BD  /* SCREEN 1 name table (2 bytes) */
+#define GRPNAM      0xF3C7  /* SCREEN 2 name table (2 bytes) */
+#define GRPCGP      0xF3CB  /* SCREEN 2 pattern generator (2 bytes) */
+
 /* Helper functions */
 #define sys_write8(addr, val) (*(volatile uint8_t*)(addr) = (val))
 #define sys_read8(addr)       (*(volatile uint8_t*)(addr))
+#define sys_read16(addr)      (*(volatile uint16_t*)(addr))
+
+/* Initialize BIOS trampoline (defined in system.c) */
+extern void basic_init(void);
+
+/* VRAM fill (defined in system.c) */
+extern void sys_filvrm(uint16_t addr, uint16_t count, uint8_t value);
+
+/* VDP fill for MSX2+ bitmap modes (defined in vdp.c) */
+extern void vdp_fill(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t color);
 
 /* BIOS call wrapper using Z88DK */
 extern void msx_bios_cls(void);
@@ -47,7 +63,10 @@ PUBLIC _msx_bios_chgmod
 PUBLIC _msx_bios_chgclr
 
 _msx_bios_cls:
-    call 0x00C3     ; CLS
+    xor a               ; Set Z flag (BIOS CLS requires Z=1)
+    ld hl, 0x00C3
+    ld (0xC02C), hl
+    call 0xC000
     ret
 
 _msx_bios_posit:
@@ -59,7 +78,11 @@ _msx_bios_posit:
     push de
     ld h, l         ; H = x
     ld l, c         ; L = y
-    call 0x00C6     ; POSIT
+    push hl
+    ld hl, 0x00C6
+    ld (0xC02C), hl
+    pop hl
+    call 0xC000     ; POSIT
     ret
 
 _msx_bios_chput:
@@ -68,7 +91,9 @@ _msx_bios_chput:
     push bc
     push hl
     ld a, c
-    call 0x00A2     ; CHPUT
+    ld hl, 0x00A2
+    ld (0xC02C), hl
+    call 0xC000     ; CHPUT
     ret
 
 _msx_bios_chgmod:
@@ -77,21 +102,66 @@ _msx_bios_chgmod:
     push bc
     push hl
     ld a, c
-    call 0x005F     ; CHGMOD
+    ld hl, 0x005F
+    ld (0xC02C), hl
+    call 0xC000     ; CHGMOD
     ret
 
 _msx_bios_chgclr:
-    call 0x0062     ; CHGCLR
+    ld hl, 0x0062
+    ld (0xC02C), hl
+    call 0xC000     ; CHGCLR
     ret
 
 #endasm
 
 void basic_cls(void) {
-    msx_bios_cls();
+    uint8_t mode;
+    uint16_t addr, size;
+
+    basic_init();
+    mode = sys_read8(SCRMOD);
+
+    switch (mode) {
+        case 0:
+            /* SCREEN 0: Fill name table with spaces */
+            addr = sys_read16(TXTNAM);
+            size = (uint16_t)sys_read8(LINLEN) * (uint16_t)sys_read8(CRTCNT);
+            sys_filvrm(addr, size, 0x20);
+            break;
+        case 1:
+            /* SCREEN 1: Fill name table with spaces */
+            addr = sys_read16(T32NAM);
+            sys_filvrm(addr, 32 * 24, 0x20);
+            break;
+        case 2:
+        case 4:
+            /* SCREEN 2/4: Clear pattern generator (6144 bytes) */
+            addr = sys_read16(GRPCGP);
+            sys_filvrm(addr, 6144, 0x00);
+            break;
+        case 3:
+            /* SCREEN 3 (multicolor): Clear pattern generator (1536 bytes) */
+            sys_filvrm(0x0000, 1536, 0x00);
+            break;
+        default:
+            /* SCREEN 5-12 (MSX2 bitmap): Use VDP command engine */
+            if (mode >= 5 && mode <= 12) {
+                uint16_t width = (mode == 6 || mode == 7) ? 512 : 256;
+                vdp_fill(0, 0, width, 212, 0);
+            }
+            break;
+    }
+
+    /* Reset cursor to home position */
+    sys_write8(CSRX, 1);
+    sys_write8(CSRY, 1);
 }
 
 void basic_screen(uint8_t mode) {
+    basic_init();
     msx_bios_chgmod(mode);
+    sys_write8(CSRSW, 0x00);  /* Hide cursor */
 }
 
 void basic_screen_ex(uint8_t mode, uint8_t sprite_size, uint8_t key_click) {
@@ -101,6 +171,7 @@ void basic_screen_ex(uint8_t mode, uint8_t sprite_size, uint8_t key_click) {
 }
 
 void basic_color(uint8_t fg, uint8_t bg, uint8_t border) {
+    basic_init();
     sys_write8(FORCLR, fg);
     sys_write8(BAKCLR, bg);
     sys_write8(BDRCLR, border);
@@ -123,6 +194,7 @@ void basic_locate_ex(uint8_t x, uint8_t y, uint8_t cursor_visible) {
 }
 
 void basic_print(const char* s) {
+    basic_init();
     while (*s) {
         msx_bios_chput(*s++);
     }
@@ -166,6 +238,7 @@ void basic_print_int(int16_t n) {
 }
 
 void basic_print_char(uint8_t c) {
+    basic_init();
     msx_bios_chput(c);
 }
 
@@ -237,7 +310,9 @@ static void write_vdp_reg(uint8_t reg, uint8_t val) {
         inc hl
         inc hl
         ld a, (hl)      ; reg
-        call 0x0047     ; WRTVDP: A=reg, E=value
+        ld hl, 0x0047
+        ld (0xC02C), hl
+        call 0xC000     ; WRTVDP via trampoline
     #endasm
 }
 
@@ -310,7 +385,11 @@ static uint8_t read_vram(uint16_t addr) {
         inc hl
         ld d, (hl)
         ex de, hl       ; HL = addr
-        call 0x004A     ; RDVRM
+        push hl
+        ld hl, 0x004A
+        ld (0xC02C), hl
+        pop hl
+        call 0xC000     ; RDVRM via trampoline
         ld l, a
     #endasm
 }
