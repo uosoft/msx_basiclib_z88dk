@@ -1062,10 +1062,16 @@ void basic_sprite_pattern(uint8_t pattern_num, const uint8_t* pattern) {
 void basic_put_sprite(uint8_t sprite_num, int16_t x, int16_t y, uint8_t color, uint8_t pattern) {
     uint16_t sat_addr;
     uint8_t ec_bit = 0;
+    uint8_t hw_pattern;
 
     if (sprite_num > 31) return;
 
     sat_addr = get_sat_base() + (uint16_t)sprite_num * 4;
+
+    /* For 16x16 sprites, multiply pattern by 4.
+     * Hardware ignores the 2 LSBs of the pattern number in 16x16 mode,
+     * so pattern N must be written as N*4 to reference SPG + N*32. */
+    hw_pattern = (get_sprite_size() == 32) ? pattern * 4 : pattern;
 
     /* Handle negative X with Early Clock bit */
     if (x < 0) {
@@ -1076,7 +1082,7 @@ void basic_put_sprite(uint8_t sprite_num, int16_t x, int16_t y, uint8_t color, u
     /* Write sprite attribute (Y, X, pattern, color+EC) */
     gfx_wrtvrm_ext(sat_addr + 0, (uint8_t)(y - 1));  /* Y is offset by 1 in hardware */
     gfx_wrtvrm_ext(sat_addr + 1, (uint8_t)x);
-    gfx_wrtvrm_ext(sat_addr + 2, pattern);
+    gfx_wrtvrm_ext(sat_addr + 2, hw_pattern);
     gfx_wrtvrm_ext(sat_addr + 3, (color & 0x0F) | ec_bit);
 }
 

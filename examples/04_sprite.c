@@ -72,7 +72,9 @@ void main(void) {
     }
 
     /* Draw background */
+    basic_color_fg(15);  /* White text on black background */
     basic_print("Move with cursor keys. Press SPACE to exit.");
+    basic_color_fg(1);   /* Restore foreground */
     basic_line(0, 20, 255, 20, 15);
     basic_box(0, 20, 255, 191, 7);
 
@@ -119,7 +121,7 @@ void main(void) {
         basic_put_sprite(0, ship_x, ship_y, 15, 0);  /* Ship - white */
         for (i = 0; i < 4; i++) {
             basic_put_sprite(1 + i, ball_x[i], ball_y[i],
-                           9 + (i % 4), 1);  /* Balls - various colors */
+                           9 + (i % 4), (i < 2) ? 1 : 2);  /* Balls + Stars */
         }
 
         /* Check collision (with cooldown to avoid blocking beep loop) */
@@ -142,6 +144,7 @@ void main(void) {
     /* Cleanup */
     basic_sprites_off();
     basic_screen(1);
+    basic_color(15, 1, 1);  /* White on black */
     basic_cls();
     basic_print("Sprite Demo Complete!");
 

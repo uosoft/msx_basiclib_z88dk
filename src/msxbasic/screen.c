@@ -26,6 +26,9 @@
 #define BDRCLR      0xF3EB
 #define SCRMOD      0xFCAF
 #define CSRSW       0xFCA9
+#define GRPACX      0xFCB7  /* Graphics accumulator X (2 bytes) */
+#define GRPACY      0xFCB9  /* Graphics accumulator Y (2 bytes) */
+#define ATRBYT      0xF3F2  /* Attribute byte for graphics */
 
 /* VRAM table address system variables */
 #define TXTNAM      0xF3B3  /* SCREEN 0 name table (2 bytes) */
@@ -37,6 +40,7 @@
 #define sys_write8(addr, val) (*(volatile uint8_t*)(addr) = (val))
 #define sys_read8(addr)       (*(volatile uint8_t*)(addr))
 #define sys_read16(addr)      (*(volatile uint16_t*)(addr))
+#define sys_write16(addr, val) (*(volatile uint16_t*)(addr) = (val))
 
 /* Initialize BIOS trampoline (defined in system.c) */
 extern void basic_init(void);
@@ -53,6 +57,7 @@ extern void msx_bios_posit(uint8_t x, uint8_t y);
 extern void msx_bios_chput(uint8_t c);
 extern void msx_bios_chgmod(uint8_t mode);
 extern void msx_bios_chgclr(void);
+extern void msx_bios_grpprt(uint8_t c);
 
 #asm
 
@@ -61,6 +66,7 @@ PUBLIC _msx_bios_posit
 PUBLIC _msx_bios_chput
 PUBLIC _msx_bios_chgmod
 PUBLIC _msx_bios_chgclr
+PUBLIC _msx_bios_grpprt
 
 _msx_bios_cls:
     xor a               ; Set Z flag (BIOS CLS requires Z=1)
@@ -111,6 +117,17 @@ _msx_bios_chgclr:
     ld hl, 0x0062
     ld (0xC02C), hl
     call 0xC000     ; CHGCLR
+    ret
+
+_msx_bios_grpprt:
+    pop hl
+    pop bc
+    push bc
+    push hl
+    ld a, c
+    ld hl, 0x008D
+    ld (0xC02C), hl
+    call 0xC000     ; GRPPRT
     ret
 
 #endasm
@@ -186,6 +203,10 @@ void basic_locate(uint8_t x, uint8_t y) {
     /* Use system variables directly - more reliable than BIOS POSIT */
     sys_write8(CSRX, x + 1);  /* 1-based */
     sys_write8(CSRY, y + 1);  /* 1-based */
+    if (sys_read8(SCRMOD) >= 2) {
+        sys_write16(GRPACX, (uint16_t)x << 3);
+        sys_write16(GRPACY, (uint16_t)y << 3);
+    }
 }
 
 void basic_locate_ex(uint8_t x, uint8_t y, uint8_t cursor_visible) {
@@ -195,15 +216,34 @@ void basic_locate_ex(uint8_t x, uint8_t y, uint8_t cursor_visible) {
 
 void basic_print(const char* s) {
     basic_init();
-    while (*s) {
-        msx_bios_chput(*s++);
+    if (sys_read8(SCRMOD) >= 2) {
+        /* Graphics mode: use GRPPRT */
+        sys_write16(GRPACX, (uint16_t)(sys_read8(CSRX) - 1) << 3);
+        sys_write16(GRPACY, (uint16_t)(sys_read8(CSRY) - 1) << 3);
+        sys_write8(ATRBYT, sys_read8(FORCLR));
+        while (*s) {
+            msx_bios_grpprt(*s++);
+        }
+        /* Update text cursor from graphics cursor */
+        sys_write8(CSRX, (uint8_t)(sys_read16(GRPACX) >> 3) + 1);
+        sys_write8(CSRY, (uint8_t)(sys_read16(GRPACY) >> 3) + 1);
+    } else {
+        /* Text mode: use CHPUT */
+        while (*s) {
+            msx_bios_chput(*s++);
+        }
     }
 }
 
 void basic_println(const char* s) {
     basic_print(s);
-    msx_bios_chput(13);  /* CR */
-    msx_bios_chput(10);  /* LF */
+    if (sys_read8(SCRMOD) >= 2) {
+        msx_bios_grpprt(13);  /* CR */
+        msx_bios_grpprt(10);  /* LF */
+    } else {
+        msx_bios_chput(13);  /* CR */
+        msx_bios_chput(10);  /* LF */
+    }
 }
 
 void basic_print_int(int16_t n) {
@@ -239,7 +279,16 @@ void basic_print_int(int16_t n) {
 
 void basic_print_char(uint8_t c) {
     basic_init();
-    msx_bios_chput(c);
+    if (sys_read8(SCRMOD) >= 2) {
+        sys_write16(GRPACX, (uint16_t)(sys_read8(CSRX) - 1) << 3);
+        sys_write16(GRPACY, (uint16_t)(sys_read8(CSRY) - 1) << 3);
+        sys_write8(ATRBYT, sys_read8(FORCLR));
+        msx_bios_grpprt(c);
+        sys_write8(CSRX, (uint8_t)(sys_read16(GRPACX) >> 3) + 1);
+        sys_write8(CSRY, (uint8_t)(sys_read16(GRPACY) >> 3) + 1);
+    } else {
+        msx_bios_chput(c);
+    }
 }
 
 void basic_print_num(uint16_t n) {
@@ -352,7 +401,7 @@ void basic_tab(uint8_t n) {
     uint8_t current_x = sys_read8(CSRX);
     if (n > current_x) {
         while (current_x < n) {
-            msx_bios_chput(' ');
+            basic_print_char(' ');
             current_x++;
         }
     }
@@ -360,7 +409,7 @@ void basic_tab(uint8_t n) {
 
 void basic_spc(uint8_t n) {
     while (n > 0) {
-        msx_bios_chput(' ');
+        basic_print_char(' ');
         n--;
     }
 }
